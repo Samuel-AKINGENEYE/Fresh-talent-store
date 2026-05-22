@@ -1,7 +1,71 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  images: string[];
+  rating: number;
+  slug: string;
+};
+
+type Category = {
+  id: number;
+  name: string;
+  slug: string;
+  icon: string;
+};
+
 export default function Home() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      // Fetch categories
+      const { data: categoriesData } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      
+      if (categoriesData) setCategories(categoriesData);
+      
+      // Fetch featured products
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_featured', true)
+        .limit(4);
+      
+      if (productsData) setFeaturedProducts(productsData);
+      
+      setLoading(false);
+    }
+    
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading Fresh Talent Store...</p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -25,10 +89,10 @@ export default function Home() {
       <section className="container mx-auto px-4 py-12">
         <h2 className="mb-8 text-2xl font-bold">Shop by Category</h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
-          {['📱 Smartphones', '💻 Laptops', '🎧 Audio', '🔌 Accessories', '⌚ Wearables', '🎮 Gaming', '📺 TV', '📷 Cameras'].map((cat) => (
-            <div key={cat} className="rounded-lg border p-4 text-center hover:shadow-lg transition cursor-pointer">
-              <div className="text-3xl mb-2">{cat.split(' ')[0]}</div>
-              <p className="text-sm font-medium">{cat.split(' ').slice(1).join(' ')}</p>
+          {categories.map((cat) => (
+            <div key={cat.id} className="rounded-lg border p-4 text-center hover:shadow-lg transition cursor-pointer">
+              <div className="text-3xl mb-2">{cat.icon || '📁'}</div>
+              <p className="text-sm font-medium">{cat.name}</p>
             </div>
           ))}
         </div>
@@ -39,34 +103,25 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <h2 className="mb-8 text-2xl font-bold">Featured Products</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="rounded-lg bg-white p-4 shadow hover:shadow-lg transition">
+            {featuredProducts.map((product) => (
+              <div key={product.id} className="rounded-lg bg-white p-4 shadow hover:shadow-lg transition">
                 <div className="mb-4 aspect-square rounded-lg bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-400">📷 Image</span>
+                  {product.images?.[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={product.images[0]} alt={product.name} className="rounded-lg object-cover w-full h-full" />
+                  ) : (
+                    <span className="text-gray-400">📷 {product.name}</span>
+                  )}
                 </div>
-                <h3 className="font-semibold">Product {i}</h3>
-                <p className="text-sm text-gray-500">Category</p>
-                <p className="mt-2 text-lg font-bold text-blue-600">RWF 0</p>
+                <h3 className="font-semibold">{product.name}</h3>
+                <p className="text-sm text-gray-500">★★★★ {product.rating} ({product.rating})</p>
+                <p className="mt-2 text-lg font-bold text-blue-600">RWF {product.price.toLocaleString()}</p>
                 <button className="mt-3 w-full rounded-lg bg-orange-500 py-2 text-white hover:bg-orange-600 transition">
                   Add to Cart
                 </button>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Flash Sale Banner */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="rounded-xl bg-gradient-to-r from-orange-500 to-red-500 p-8 text-center text-white">
-          <h2 className="mb-2 text-2xl font-bold">⚡ Flash Sale</h2>
-          <p className="mb-4">Up to 50% off on selected items</p>
-          <div className="mb-4 flex justify-center space-x-4 text-2xl font-bold">
-            <span>12h</span> <span>24m</span> <span>35s</span>
-          </div>
-          <button className="rounded-lg bg-white px-6 py-2 font-semibold text-orange-500 hover:bg-gray-100 transition">
-            Shop Flash Deals
-          </button>
         </div>
       </section>
 
