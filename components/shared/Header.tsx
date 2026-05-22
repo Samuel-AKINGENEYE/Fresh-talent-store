@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, User, LogOut, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Menu, X, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
+import { SearchBar } from './SearchBar';
 
 export function Header() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { totalItems } = useCart();
+  const { totalItems: wishlistCount } = useWishlist();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,14 +43,8 @@ export function Header() {
             <span className="text-sm text-orange-500 hidden sm:inline">Store</span>
           </Link>
 
-          <div className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="w-full rounded-full border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
+          <div className="hidden md:flex flex-1 max-w-lg">
+            <SearchBar />
           </div>
 
           <nav className="hidden md:flex items-center space-x-4">
@@ -63,6 +60,11 @@ export function Header() {
             <Link href="/wishlist">
               <button className="relative rounded-full p-2 hover:bg-gray-100">
                 <Heart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-xs font-medium text-white flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
               </button>
             </Link>
             <Link href="/cart">
@@ -109,11 +111,7 @@ export function Header() {
 
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t space-y-4">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="w-full rounded-lg border border-gray-300 px-4 py-2"
-            />
+            <SearchBar />
             <div className="space-y-2">
               <Link href="/products" className="block py-2 text-gray-700 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>
                 Shop
@@ -132,9 +130,3 @@ export function Header() {
   );
 }
 
-// Add language switcher in header
-// Add this to the actions section:
-// <select className="text-sm border rounded px-2 py-1">
-//   <option value="en">EN</option>
-//   <option value="rw">RW</option>
-// </select>
