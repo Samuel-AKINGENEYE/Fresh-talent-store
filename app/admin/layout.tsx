@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Settings, LogOut, Menu, X, RotateCcw } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -13,6 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAdmin, setIsAdmin] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lowStockCount, setLowStockCount] = useState(0);
+  const [pendingReturns, setPendingReturns] = useState(0);
 
   useEffect(() => {
     async function checkAdmin() {
@@ -42,6 +43,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .select('id', { count: 'exact', head: true })
       .lt('stock', threshold)
       .then(({ count }) => setLowStockCount(count ?? 0));
+
+    supabase
+      .from('return_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .then(({ count }) => setPendingReturns(count ?? 0));
   }, [isAdmin, pathname]);
 
   if (loading) {
@@ -58,6 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: 0 },
     { href: '/admin/products', label: 'Products', icon: Package, badge: lowStockCount },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, badge: 0 },
+    { href: '/admin/returns', label: 'Returns', icon: RotateCcw, badge: pendingReturns },
     { href: '/admin/customers', label: 'Customers', icon: Users, badge: 0 },
     { href: '/admin/settings', label: 'Settings', icon: Settings, badge: 0 },
   ];
