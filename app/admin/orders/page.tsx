@@ -10,12 +10,14 @@ interface Order {
   order_number: string;
   user_id: string;
   guest_email: string | null;
+  guest_phone: string | null;
   status: string;
   payment_method: string;
   payment_status: string;
   total: number;
   created_at: string;
   profiles?: { email: string };
+  addresses?: { phone: string };
 }
 
 export default function AdminOrdersPage() {
@@ -59,13 +61,28 @@ export default function AdminOrdersPage() {
       .from('orders')
       .update({ status: newStatus })
       .eq('id', orderId);
-    
+
     if (error) {
       alert('Error updating order status: ' + error.message);
-    } else {
-      await loadOrders();
-      alert(`Order status updated to ${newStatus}`);
+      return;
     }
+
+    // Send SMS notification to customer
+    const order = orders.find(o => o.id === orderId);
+    const phone = order?.addresses?.phone || order?.guest_phone;
+    if (phone && order) {
+      fetch('/api/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone,
+          type: 'order_status',
+          data: { orderNumber: order.order_number, status: newStatus, total: order.total },
+        }),
+      }).catch(console.error);
+    }
+
+    await loadOrders();
   };
 
   const filteredOrders = orders.filter(order => {

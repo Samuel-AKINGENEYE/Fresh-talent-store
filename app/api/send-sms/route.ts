@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       type,
     });
     
-    return NextResponse.json({ success: true, mock: result.mock });
+    return NextResponse.json({ success: true, dev: result.dev ?? false });
   } catch (error) {
     console.error('SMS API error:', error);
     return NextResponse.json({ error: 'Failed to send SMS' }, { status: 500 });
