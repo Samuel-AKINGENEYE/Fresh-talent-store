@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/Header";
 import { Footer } from "@/components/shared/Footer";
@@ -8,10 +8,15 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["300", "400", "500", "600", "700", "800"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Fresh Talent Store - Tech. Fresh. For You.",
+  title: "Fresh Talent Store — Tech. Fresh. For You.",
   description: "Your premier electronics store in Kigali, Rwanda. Quality products, fast delivery, great prices.",
   authors: [{ name: "Samuel AKINGENEYE", url: "https://github.com/Samuel-AKINGENEYE" }],
   creator: "Samuel AKINGENEYE",
@@ -37,7 +42,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={inter.className}>
+      <body className={`${plusJakartaSans.variable} font-sans antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <WishlistProvider>
             <CartProvider>

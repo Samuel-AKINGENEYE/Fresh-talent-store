@@ -7,40 +7,140 @@
   --color-secondary-dark: #EA580C;
 }
 
+/* ── Typography ───────────────────────────────────────────── */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  --foreground-rgb: 15, 23, 42;
+  --background-rgb: 248, 250, 252;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-rgb: 0, 0, 0;
+    --foreground-rgb: 248, 250, 252;
+    --background-rgb: 15, 23, 42;
   }
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Animations */
+/* ── Float animations (hero product cards) ────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-14px) rotate(0.4deg); }
+  66%       { transform: translateY(-6px) rotate(-0.3deg); }
+}
+
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(10px) rotate(-0.4deg); }
+  66%       { transform: translateY(4px) rotate(0.3deg); }
+}
+
+.animate-float         { animation: float 5.5s ease-in-out infinite; }
+.animate-float-reverse { animation: float-reverse 6.5s ease-in-out infinite; }
+
+/* ── Glow orb pulse (hero background) ────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(1.08); }
+}
+
+.animate-glow-pulse { animation: glow-pulse 5s ease-in-out infinite; }
+
+/* ── Section entry animations ─────────────────────────────── */
 @keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.8s ease-out;
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Line clamp for product titles */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in        { animation: fade-in 0.7s ease-out both; }
+.animate-slide-in-left  { animation: slide-in-left 0.7s ease-out both; }
+.animate-slide-in-right { animation: slide-in-right 0.7s ease-out both; }
+.animate-scale-in       { animation: scale-in 0.6s ease-out both; }
+.animate-slide-up       { animation: fade-in 0.3s ease-out; }
+
+/* ── Stagger delay helpers ────────────────────────────────── */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }
+.delay-800 { animation-delay: 0.8s; }
+.delay-900 { animation-delay: 0.9s; }
+
+/* ── Shimmer gradient text (hero headline) ────────────────── */
+@keyframes shimmer-move {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    #60A5FA 0%,
+    #818CF8 20%,
+    #F97316 40%,
+    #818CF8 60%,
+    #60A5FA 80%,
+    #818CF8 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer-move 5s linear infinite;
+}
+
+/* ── Gradient text utility ────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #3B82F6, #6366F1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Card hover lift ──────────────────────────────────────── */
+.card-hover {
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.11);
+}
+
+/* ── Hero subtle grid overlay ─────────────────────────────── */
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+
+/* ── Line clamp utilities ─────────────────────────────────── */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -48,17 +148,9 @@ body {
   overflow: hidden;
 }
 
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out;
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
