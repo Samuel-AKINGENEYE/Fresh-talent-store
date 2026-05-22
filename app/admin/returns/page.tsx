@@ -62,9 +62,13 @@ export default function AdminReturnsPage() {
 
   const updateStatus = async (id: number, newStatus: string) => {
     setUpdating(id);
+    const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch('/api/returns', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token ?? ''}`,
+      },
       body: JSON.stringify({ id, status: newStatus }),
     });
 

@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { rateLimit, getClientIp } from '@/lib/utils/rate-limit';
 
 async function syncToMailchimp(email: string, name?: string): Promise<{ success: boolean; dev?: boolean; error?: string }> {
   const apiKey = process.env.MAILCHIMP_API_KEY;
@@ -57,12 +58,23 @@ async function syncToMailchimp(email: string, name?: string): Promise<{ success:
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Rate limit: max 5 subscribe attempts per IP per 15 minutes
+    const ip = getClientIp(request);
+    if (!rateLimit(`subscribe:${ip}`, 5, 15 * 60_000)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { email, name } = await request.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
+    }
+
+    // Basic email format validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
     const result = await syncToMailchimp(email, name);
