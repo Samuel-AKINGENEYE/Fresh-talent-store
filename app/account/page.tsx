@@ -1,14 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase, getUserProfile } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+interface Profile {
+  full_name: string | null;
+  phone: string | null;
+}
 
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -48,6 +53,8 @@ export default function AccountPage() {
   }, [router]);
 
   const handleSave = async () => {
+    if (!user) return;
+    
     setSaving(true);
     setMessage(null);
     
@@ -119,9 +126,6 @@ export default function AccountPage() {
                 </Link>
                 <Link href="/account/orders" className="block px-4 py-2 rounded hover:bg-gray-50 transition">
                   📦 My Orders
-                </Link>
-                <Link href="/account/wishlist" className="block px-4 py-2 rounded hover:bg-gray-50 transition">
-                  ❤️ Wishlist
                 </Link>
                 <Link href="/account/addresses" className="block px-4 py-2 rounded hover:bg-gray-50 transition">
                   📍 Addresses
