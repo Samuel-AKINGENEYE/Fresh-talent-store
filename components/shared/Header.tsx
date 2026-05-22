@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { SearchBar } from './SearchBar';
+import LocaleSwitcher from './LocaleSwitcher';
 
 export function Header() {
   const router = useRouter();
@@ -57,6 +58,9 @@ export function Header() {
           </nav>
 
           <div className="flex items-center space-x-2">
+            <div className="hidden md:flex">
+              <LocaleSwitcher />
+            </div>
             <Link href="/wishlist">
               <button className="relative rounded-full p-2 hover:bg-gray-100">
                 <Heart className="h-5 w-5" />
@@ -112,6 +116,7 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t space-y-4">
             <SearchBar />
+            <LocaleSwitcher />
             <div className="space-y-2">
               <Link href="/products" className="block py-2 text-gray-700 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>
                 Shop
