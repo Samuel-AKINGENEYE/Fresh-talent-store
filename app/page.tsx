@@ -1,22 +1,11 @@
+import { Header } from '@/components/shared/Header';
+import { Footer } from '@/components/shared/Footer';
+
 export default function Home() {
   return (
     <main className="min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="text-xl font-bold">
-            <span className="text-blue-600">Fresh Talent</span>
-            <span className="text-orange-500"> Store</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button className="hidden md:block text-gray-600 hover:text-blue-600">Sign In</button>
-            <button className="rounded-full bg-orange-500 px-4 py-2 text-white hover:bg-orange-600">
-              Cart (0)
-            </button>
-          </div>
-        </div>
-      </header>
-
+      <Header />
+      
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
         <div className="container mx-auto px-4 py-20 text-center">
@@ -81,47 +70,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <h3 className="mb-4 font-semibold text-white">Fresh Talent Store</h3>
-              <p className="text-sm">Your trusted electronics store in Kigali, Rwanda.</p>
-            </div>
-            <div>
-              <h3 className="mb-4 font-semibold text-white">Quick Links</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition">FAQs</a></li>
-                <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="mb-4 font-semibold text-white">Contact</h3>
-              <ul className="space-y-2 text-sm">
-                <li>📍 Kigali, Rwanda</li>
-                <li>📞 +250 788 123 456</li>
-                <li>✉️ info@freshtalent.rw</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="mb-4 font-semibold text-white">Follow Us</h3>
-              <div className="flex space-x-4">
-                <a href="#" className="hover:text-white transition">📘</a>
-                <a href="#" className="hover:text-white transition">📸</a>
-                <a href="#" className="hover:text-white transition">🐦</a>
-              </div>
-              <a href="https://wa.me/250788123456" className="mt-4 inline-block text-green-400 hover:text-green-300 transition">
-                💬 Chat on WhatsApp
-              </a>
-            </div>
-          </div>
-          <div className="mt-8 border-t border-gray-800 pt-8 text-center text-sm">
-            <p>&copy; 2026 Fresh Talent Store. All rights reserved. Kigali, Rwanda</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
