@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Minus, Plus } from 'lucide-react';
+import ProductReviews from '@/components/product/ProductReviews';
 
 interface Product {
   id: number;
@@ -227,6 +228,13 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        {product && (
+          <div className="mt-8">
+            <ProductReviews productId={product.id} productName={product.name} />
+          </div>
+        )}
       </div>
     </div>
   );
