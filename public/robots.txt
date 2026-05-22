@@ -1,0 +1,15 @@
+# Allow all robots to crawl
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://fresh-talent-store.vercel.app/sitemap.xml
+
+# Disallow admin pages
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+
+# Crawl delay
+Crawl-delay: 1
