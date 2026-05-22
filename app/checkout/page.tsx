@@ -44,6 +44,10 @@ export default function CheckoutPage() {
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [showFlutterwave, setShowFlutterwave] = useState(false);
 
+  // Loyalty points
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [useLoyalty, setUseLoyalty] = useState(false);
+
   // Redirect if cart is empty
   useEffect(() => {
     if (items.length === 0 && !loading) {
@@ -80,12 +84,23 @@ export default function CheckoutPage() {
         setSelectedAddressId(defaultAddress.id);
         setCodPhone(defaultAddress.phone || '');
       }
+
+      // Load loyalty points balance
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        fetch('/api/loyalty', { headers: { Authorization: `Bearer ${session.access_token}` } })
+          .then(r => r.json())
+          .then(d => setLoyaltyPoints(d.points ?? 0))
+          .catch(() => {});
+      }
     }
     loadAddresses();
   }, [router]);
 
   const deliveryFee = subtotal > 100000 ? 0 : 5000;
-  const total = subtotal + deliveryFee;
+  // 1 point = 10 RWF; cap discount to prevent negative totals
+  const loyaltyDiscount = useLoyalty ? Math.min(loyaltyPoints * 10, subtotal + deliveryFee) : 0;
+  const total = subtotal + deliveryFee - loyaltyDiscount;
 
   const saveAddress = async () => {
     setLoading(true);
@@ -198,7 +213,7 @@ export default function CheckoutPage() {
         payment_status: 'pending',
         subtotal: subtotal,
         delivery_fee: deliveryFee,
-        discount: 0,
+        discount: loyaltyDiscount,
         total: total,
         guest_phone: selectedAddress?.phone,
         guest_email: user?.email,
@@ -224,6 +239,33 @@ export default function CheckoutPage() {
     return order;
   };
 
+  const handleLoyaltyPostOrder = async (orderId: number) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    };
+
+    // If loyalty points were redeemed, deduct them
+    if (useLoyalty && loyaltyPoints > 0) {
+      const pointsUsed = Math.min(loyaltyPoints, Math.floor(loyaltyDiscount / 10));
+      await fetch('/api/loyalty', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'redeem', orderId, pointsToRedeem: pointsUsed }),
+      }).catch(() => {});
+    }
+
+    // Award points for the purchase
+    await fetch('/api/loyalty', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ action: 'award', orderId, orderTotal: total }),
+    }).catch(() => {});
+  };
+
   const handleFlutterwaveSuccess = async (transactionId: number) => {
     if (!pendingOrderId) return;
     setLoading(true);
@@ -234,6 +276,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({ transaction_id: transactionId, order_id: pendingOrderId }),
       });
       if (res.ok) {
+        handleLoyaltyPostOrder(Number(pendingOrderId)).catch(() => {});
         await clearCart();
         router.push(`/checkout/confirmation?order=${pendingOrderId}`);
       } else {
@@ -264,6 +307,7 @@ export default function CheckoutPage() {
       const order = await createOrderInDB();
 
       if (paymentMethod === 'cod') {
+        handleLoyaltyPostOrder(order.id).catch(() => {});
         await clearCart();
         router.push(`/checkout/confirmation?order=${order.id}`);
       } else {
@@ -749,6 +793,28 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-lg shadow p-6 sticky top-20">
               <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
               
+              {/* Loyalty points redemption */}
+              {loyaltyPoints > 0 && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useLoyalty}
+                      onChange={(e) => setUseLoyalty(e.target.checked)}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-yellow-800">
+                        Use {loyaltyPoints} loyalty points
+                      </p>
+                      <p className="text-xs text-yellow-600">
+                        = RWF {Math.min(loyaltyPoints * 10, subtotal + deliveryFee).toLocaleString()} off
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              )}
+
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
@@ -762,6 +828,12 @@ export default function CheckoutPage() {
                     <span>RWF {deliveryFee.toLocaleString()}</span>
                   )}
                 </div>
+                {loyaltyDiscount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Loyalty Discount</span>
+                    <span>- RWF {loyaltyDiscount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="border-t pt-2">
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
