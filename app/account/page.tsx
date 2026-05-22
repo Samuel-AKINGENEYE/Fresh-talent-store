@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import LoyaltyCard from '@/components/account/LoyaltyCard';
 
 interface Profile {
   full_name: string | null;
@@ -130,6 +131,9 @@ export default function AccountPage() {
                 <Link href="/account/addresses" className="block px-4 py-2 rounded hover:bg-gray-50 transition">
                   📍 Addresses
                 </Link>
+                <Link href="/account" className="block px-4 py-2 rounded hover:bg-gray-50 transition">
+                  ⭐ Loyalty Points
+                </Link>
               </div>
               
               <button
@@ -141,8 +145,13 @@ export default function AccountPage() {
             </div>
           </div>
           
-          {/* Main Content - Profile Info */}
-          <div className="md:col-span-2">
+          {/* Main Content */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Loyalty Points Card */}
+            <LoyaltyCard />
+
+            {/* PLACEHOLDER: Profile Info section below */}
+            <div>
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Profile Information</h3>
@@ -247,6 +256,7 @@ export default function AccountPage() {
                 </div>
               )}
             </div>
+            </div>{/* end profile info */}
           </div>
         </div>
       </div>
