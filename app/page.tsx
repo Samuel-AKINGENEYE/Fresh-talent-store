@@ -4,9 +4,27 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  icon: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  slug: string;
+  price: number;
+  compare_at_price: number | null;
+  images: string[];
+  rating: number;
+  is_featured: boolean;
+}
+
 export default function Home() {
-  const [categories, setCategories] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,7 +89,7 @@ export default function Home() {
       <section className="container mx-auto px-4 py-12">
         <h2 className="text-2xl font-bold mb-8 text-center">Shop by Category</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-          {categories.map((cat: any) => (
+          {categories.map((cat) => (
             <div key={cat.id} className="border rounded-lg p-4 text-center hover:shadow-lg">
               <div className="text-3xl mb-2">{cat.icon || '📦'}</div>
               <p className="text-sm">{cat.name}</p>
@@ -85,7 +103,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-8 text-center">Featured Products</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product: any) => (
+            {featuredProducts.map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow p-4">
                 <div className="aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
                   {product.images?.[0] ? (
