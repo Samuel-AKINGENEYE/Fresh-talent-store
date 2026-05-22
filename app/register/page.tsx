@@ -27,6 +27,13 @@ export default function RegisterPage() {
     if (error) {
       setError(error.message);
     } else {
+      // Fire-and-forget: sync new user to Mailchimp audience
+      fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name: fullName }),
+      }).catch(console.error);
+
       router.push('/login?message=Check your email to confirm your account');
     }
     setLoading(false);
