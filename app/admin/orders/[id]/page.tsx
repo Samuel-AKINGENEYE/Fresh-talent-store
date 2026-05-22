@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Printer, Truck, Package, MapPin, CreditCard, Calendar, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Printer, Package, MapPin, CreditCard, ArrowLeft, CheckCircle } from 'lucide-react';
+import { generateInvoicePDF } from '@/lib/utils/generate-invoice';
 
 interface Order {
   id: number;
@@ -128,9 +129,16 @@ export default function OrderDetailPage() {
           </Link>
           <h1 className="text-2xl font-bold">Order #{order.order_number}</h1>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
+        <button
+          onClick={() => {
+            if (!order) return;
+            const addr = Array.isArray(order.address) ? order.address[0] : order.address;
+            generateInvoicePDF(order, items, addr, customerEmail ?? undefined);
+          }}
+          className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+        >
           <Printer className="h-4 w-4" />
-          Print Invoice
+          Download Invoice
         </button>
       </div>
 
