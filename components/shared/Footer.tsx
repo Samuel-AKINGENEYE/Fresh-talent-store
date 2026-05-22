@@ -98,7 +98,7 @@ export function Footer() {
                 </li>
                 <li className="flex items-center gap-3 text-sm">
                   <Phone className="h-4 w-4 text-blue-400 shrink-0" />
-                  <a href="tel:+250788123456" className="hover:text-white transition-colors">+250 788 123 456</a>
+                  <a href="tel:+250790663921" className="hover:text-white transition-colors">+250 790 663 921</a>
                 </li>
                 <li className="flex items-center gap-3 text-sm">
                   <Mail className="h-4 w-4 text-blue-400 shrink-0" />
@@ -107,11 +107,13 @@ export function Footer() {
               </ul>
 
               <a
-                href="https://wa.me/250788123456"
+                href="https://wa.me/250790663921?text=Hi!%20I'm%20interested%20in%20your%20products."
+                target="_blank"
+                rel="noopener noreferrer"
                 className="mt-5 inline-flex items-center gap-2 bg-green-600/20 border border-green-600/30 text-green-400 text-sm font-medium px-4 py-2 rounded-xl hover:bg-green-600/30 hover:text-green-300 transition-all duration-200"
               >
                 <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                WhatsApp Us
+                WhatsApp: +250 790 663 921
               </a>
             </div>
           </div>

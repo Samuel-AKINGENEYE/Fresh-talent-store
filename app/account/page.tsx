@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import LoyaltyCard from '@/components/account/LoyaltyCard';
+import { AchievementBadges } from '@/components/gamification/AchievementBadges';
+import { DailyCheckIn } from '@/components/gamification/DailyCheckIn';
 
 interface Profile {
   full_name: string | null;
@@ -147,8 +149,14 @@ export default function AccountPage() {
           
           {/* Main Content */}
           <div className="md:col-span-2 space-y-6">
+            {/* Daily check-in */}
+            <DailyCheckIn />
+
             {/* Loyalty Points Card */}
             <LoyaltyCard />
+
+            {/* Achievement Badges */}
+            <AchievementBadges />
 
             {/* PLACEHOLDER: Profile Info section below */}
             <div>

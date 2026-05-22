@@ -149,51 +149,62 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Shop Electronics</h1>
-          <p className="text-gray-600">Discover the best deals on premium electronics</p>
+          <h1 className="text-3xl font-bold mb-2 text-slate-900">Shop Electronics</h1>
+          <p className="text-slate-600">Discover the best deals on premium electronics</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
+              <label htmlFor="product-search" className="sr-only">Search products</label>
               <input
+                id="product-search"
                 type="text"
                 placeholder="Search products by name or brand..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-slate-900 placeholder:text-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
-            <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="newest">Newest First</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="rating">Highest Rated</option>
-            </select>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="product-sort" className="text-sm font-medium text-slate-700 whitespace-nowrap">Sort by</label>
+              <select
+                id="product-sort"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="newest">Newest First</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="rating">Highest Rated</option>
+              </select>
+            </div>
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              aria-expanded={showFilters}
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-slate-700 font-medium hover:bg-gray-50 transition-colors"
             >
-              <SlidersHorizontal className="h-4 w-4" />
+              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
               Filters
             </button>
 
-            <div className="flex gap-2 border rounded-lg p-1">
+            <div className="flex gap-2 border rounded-lg p-1" role="group" aria-label="View mode">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}
+                aria-label="Grid view"
+                aria-pressed={viewMode === 'grid'}
+                className={`p-2 rounded transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-gray-100'}`}
               >
                 <Grid3x3 className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}
+                aria-label="List view"
+                aria-pressed={viewMode === 'list'}
+                className={`p-2 rounded transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-gray-100'}`}
               >
                 <List className="h-4 w-4" />
               </button>
@@ -281,8 +292,8 @@ export default function ProductsPage() {
         )}
 
         <div className="mb-4 flex justify-between items-center">
-          <p className="text-gray-600">
-            Showing {filteredProducts.length} of {products.length} products
+          <p className="text-slate-700 font-medium">
+            Showing <span className="text-blue-600 font-bold">{filteredProducts.length}</span> of {products.length} products
           </p>
         </div>
 

@@ -96,7 +96,8 @@ export function SearchBar({ className = '' }: { className?: string }) {
           onKeyDown={handleKeyDown}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder="Search products..."
-          className="w-full rounded-full border border-gray-300 pl-9 pr-9 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          aria-label="Search products"
+          className="w-full rounded-full border border-slate-300 bg-white pl-9 pr-9 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
         {query && (
           <button

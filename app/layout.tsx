@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/Header";
 import { Footer } from "@/components/shared/Footer";
+import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { NextIntlClientProvider } from "next-intl";
@@ -49,6 +50,7 @@ export default async function RootLayout({
               <Header />
               <main className="min-h-screen">{children}</main>
               <Footer />
+              <WhatsAppButton />
             </CartProvider>
           </WishlistProvider>
         </NextIntlClientProvider>

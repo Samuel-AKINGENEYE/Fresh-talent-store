@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { ArrowRight, Star, Truck, Shield, Headphones, Zap, ShoppingCart, BadgePercent } from 'lucide-react';
+import { ArrowRight, Star, Truck, Shield, Headphones, Zap, ShoppingCart, BadgePercent, Trophy, Gift } from 'lucide-react';
+import { SpinWheel } from '@/components/gamification/SpinWheel';
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface Category {
@@ -24,98 +25,122 @@ interface Product {
   is_featured: boolean;
 }
 
-// ── Real Unsplash electronics images ──────────────────────────────────
+// ── Sample products — 60 % laptops · 20 % phones · 20 % accessories ──
 const SAMPLE_PRODUCTS: Product[] = [
   {
     id: 101,
-    name: 'Samsung Galaxy S24 Ultra',
-    slug: 'samsung-galaxy-s24-ultra',
-    price: 1199000,
-    compare_at_price: 1399000,
-    images: ['https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=480&h=480&fit=crop&q=85'],
-    rating: 4.9,
-    is_featured: true,
-  },
-  {
-    id: 102,
-    name: 'Sony WH-1000XM5 Headphones',
-    slug: 'sony-wh-1000xm5',
-    price: 479000,
-    compare_at_price: 560000,
-    images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=480&h=480&fit=crop&q=85'],
+    name: 'Business Laptop Core i5 15.6"',
+    slug: 'laptop-core-i5',
+    price: 420000,
+    compare_at_price: 499000,
+    images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=480&h=480&fit=crop&q=85'],
     rating: 4.8,
     is_featured: true,
   },
   {
+    id: 102,
+    name: 'Gaming Laptop i7 RTX 4060',
+    slug: 'gaming-laptop-rtx',
+    price: 680000,
+    compare_at_price: 799000,
+    images: ['https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=480&h=480&fit=crop&q=85'],
+    rating: 4.9,
+    is_featured: true,
+  },
+  {
     id: 103,
-    name: 'MacBook Air M3',
-    slug: 'macbook-air-m3',
-    price: 2499000,
+    name: 'Slim Ultrabook 14" 8GB RAM',
+    slug: 'slim-ultrabook',
+    price: 350000,
     compare_at_price: null,
-    images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=480&h=480&fit=crop&q=85'],
-    rating: 5.0,
+    images: ['https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=480&h=480&fit=crop&q=85'],
+    rating: 4.6,
     is_featured: true,
   },
   {
     id: 104,
-    name: 'Apple Watch Series 9',
-    slug: 'apple-watch-series-9',
-    price: 649000,
-    compare_at_price: 750000,
-    images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=480&h=480&fit=crop&q=85'],
+    name: 'Samsung Galaxy A55 5G',
+    slug: 'samsung-galaxy-a55',
+    price: 285000,
+    compare_at_price: 320000,
+    images: ['https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=480&h=480&fit=crop&q=85'],
     rating: 4.7,
+    is_featured: true,
+  },
+  {
+    id: 105,
+    name: 'Wireless Noise-Cancelling Headphones',
+    slug: 'wireless-headphones',
+    price: 48000,
+    compare_at_price: 65000,
+    images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=480&h=480&fit=crop&q=85'],
+    rating: 4.6,
     is_featured: true,
   },
 ];
 
-// Hero animated product cards
+// ── Hero floating cards — 2 laptops + 1 phone ─────────────────────────
 const HERO_CARDS = [
   {
-    name: 'iPhone 15 Pro',
-    price: 'RWF 1,299,000',
-    badge: 'New Arrival',
+    name: 'Laptop Core i5',
+    price: 'RWF 420,000',
+    badge: 'Best Seller',
     badgeCls: 'bg-blue-500',
-    img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=220&h=220&fit=crop&q=85',
+    img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=220&h=220&fit=crop&q=85',
     animCls: 'animate-float delay-200',
     rotate: '-rotate-2',
   },
   {
-    name: 'MacBook Air M3',
-    price: 'RWF 2,499,000',
+    name: 'Gaming Laptop',
+    price: 'RWF 680,000',
     badge: 'Hot Deal',
     badgeCls: 'bg-red-500',
-    img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=220&h=220&fit=crop&q=85',
+    img: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=220&h=220&fit=crop&q=85',
     animCls: 'animate-float-reverse delay-500',
     rotate: 'rotate-1',
   },
   {
-    name: 'Sony XM5',
-    price: 'RWF 479,000',
-    badge: '15% OFF',
-    badgeCls: 'bg-orange-500',
-    img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=220&h=220&fit=crop&q=85',
+    name: 'Galaxy A55 5G',
+    price: 'RWF 285,000',
+    badge: 'New Arrival',
+    badgeCls: 'bg-green-500',
+    img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=220&h=220&fit=crop&q=85',
     animCls: 'animate-float delay-700',
     rotate: 'rotate-2',
   },
 ];
 
-// Feature trust items
+// ── Trust features bar ─────────────────────────────────────────────────
 const FEATURES = [
-  { Icon: Truck,       title: 'Fast Delivery',      desc: 'Same-day in Kigali',         color: 'text-blue-600',   bg: 'bg-blue-50'   },
-  { Icon: Shield,      title: 'Genuine Products',   desc: '100% authentic, warranted',  color: 'text-indigo-600', bg: 'bg-indigo-50' },
-  { Icon: Headphones,  title: '24/7 Support',       desc: 'Always here to help you',    color: 'text-violet-600', bg: 'bg-violet-50' },
-  { Icon: BadgePercent,title: 'Best Prices',         desc: 'Price-match guarantee',      color: 'text-orange-600', bg: 'bg-orange-50' },
+  { Icon: Truck,        title: 'Fast Delivery',    desc: 'Same-day in Kigali',        color: 'text-blue-600',   bg: 'bg-blue-50'   },
+  { Icon: Shield,       title: 'Genuine Products', desc: '100% authentic, warranted', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { Icon: Headphones,   title: '24/7 Support',     desc: 'Always here to help',       color: 'text-violet-600', bg: 'bg-violet-50' },
+  { Icon: BadgePercent, title: 'Best Prices',      desc: 'Price-match guarantee',     color: 'text-orange-600', bg: 'bg-orange-50' },
 ];
 
-// ── Star component ─────────────────────────────────────────────────────
+// ── Category showcase — 60/20/20 tile layout ──────────────────────────
+const SHOWCASES = [
+  { label: 'Business Laptops', img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=320&fit=crop&q=80', accent: 'from-blue-500 to-blue-700',    href: '/products?category=laptops'      },
+  { label: 'Gaming Laptops',   img: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400&h=320&fit=crop&q=80', accent: 'from-red-500 to-rose-700',     href: '/products?category=laptops'      },
+  { label: 'Slim Ultrabooks',  img: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&h=320&fit=crop&q=80', accent: 'from-indigo-500 to-indigo-700', href: '/products?category=laptops'      },
+  { label: 'Smartphones',      img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=320&fit=crop&q=80', accent: 'from-green-500 to-emerald-700', href: '/products?category=phones'       },
+  { label: 'Accessories',      img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=320&fit=crop&q=80', accent: 'from-orange-500 to-orange-700', href: '/products?category=accessories'  },
+];
+
+// ── Loyalty tiers ──────────────────────────────────────────────────────
+const TIERS = [
+  { name: 'Bronze',   pts: '0–999',    color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  perks: 'Earn 1 pt / RWF 1,000' },
+  { name: 'Silver',   pts: '1k–4,999', color: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200',  perks: 'Earn 1.5 pts + priority support' },
+  { name: 'Gold',     pts: '5k–9,999', color: 'text-yellow-600', bg: 'bg-yellow-50',  border: 'border-yellow-200', perks: 'Earn 2 pts + flash access' },
+  { name: 'Platinum', pts: '10k+',     color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   perks: 'Earn 3 pts + VIP perks' },
+];
+
+// ── Stars ──────────────────────────────────────────────────────────────
 function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((s) => (
-        <Star
-          key={s}
-          className={`h-3.5 w-3.5 ${s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'}`}
-        />
+        <Star key={s} className={`h-3.5 w-3.5 ${s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'}`} />
       ))}
     </div>
   );
@@ -131,7 +156,7 @@ function DiscountBadge({ price, compareAt }: { price: number; compareAt: number 
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────
+// ── Main page ──────────────────────────────────────────────────────────
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -146,7 +171,7 @@ export default function Home() {
         .from('products')
         .select('*')
         .eq('is_featured', true)
-        .limit(4);
+        .limit(5);
       setFeaturedProducts(prodsData || []);
       setLoading(false);
     }
@@ -172,14 +197,13 @@ export default function Home() {
     <>
       {/* ── HERO ──────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-900 hero-grid">
-        {/* Glow orbs */}
         <div className="absolute top-10 left-1/4 h-72 w-72 rounded-full bg-blue-500 blur-[120px] animate-glow-pulse pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-indigo-600 blur-[100px] animate-glow-pulse delay-400 pointer-events-none" />
 
         <div className="container mx-auto px-4 lg:px-6 py-20 lg:py-28 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
-            {/* Left — text */}
+            {/* Left */}
             <div className="space-y-7">
               <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 backdrop-blur text-white text-xs font-semibold px-4 py-2 rounded-full animate-fade-in">
                 <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
@@ -193,7 +217,7 @@ export default function Home() {
               </h1>
 
               <p className="text-slate-300 text-lg leading-relaxed max-w-md animate-slide-in-left delay-300">
-                Premium electronics delivered fast across Kigali. Genuine products, unbeatable prices, and support that actually helps.
+                Premium laptops, phones & accessories delivered fast across Kigali. Genuine products, spin to win discounts, earn loyalty points.
               </p>
 
               <div className="flex flex-wrap gap-3 animate-slide-in-left delay-400">
@@ -209,7 +233,6 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Mini trust pills */}
               <div className="flex flex-wrap gap-3 pt-1 animate-fade-in delay-600">
                 {['Free delivery in Kigali', '1,000+ happy customers', '1-year warranty'].map((t) => (
                   <span key={t} className="text-xs text-slate-300 bg-white/8 border border-white/12 px-3 py-1.5 rounded-full font-medium">
@@ -219,26 +242,15 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right — floating product cards */}
+            {/* Right — floating cards */}
             <div className="hidden lg:flex items-center justify-center relative h-[440px]">
               {HERO_CARDS.map((card, i) => {
-                const positions = [
-                  'top-0 left-8',
-                  'top-24 right-0',
-                  'bottom-0 left-20',
-                ];
+                const positions = ['top-0 left-8', 'top-24 right-0', 'bottom-0 left-20'];
                 return (
-                  <div
-                    key={card.name}
-                    className={`absolute ${positions[i]} ${card.animCls} ${card.rotate}`}
-                  >
+                  <div key={card.name} className={`absolute ${positions[i]} ${card.animCls} ${card.rotate}`}>
                     <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 shadow-2xl w-52">
                       <div className="relative rounded-xl overflow-hidden aspect-square">
-                        <img
-                          src={card.img}
-                          alt={card.name}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={card.img} alt={card.name} className="w-full h-full object-cover" />
                         <span className={`absolute top-2 left-2 ${card.badgeCls} text-white text-[10px] font-bold px-2 py-0.5 rounded-lg`}>
                           {card.badge}
                         </span>
@@ -261,11 +273,7 @@ export default function Home() {
         <div className="container mx-auto px-4 lg:px-6 py-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {FEATURES.map(({ Icon, title, desc, color, bg }, i) => (
-              <div
-                key={title}
-                className={`flex items-center gap-4 animate-fade-in`}
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
+              <div key={title} className="flex items-center gap-4 animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className={`h-11 w-11 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
                   <Icon className={`h-5 w-5 ${color}`} />
                 </div>
@@ -287,7 +295,6 @@ export default function Home() {
               <p className="text-blue-600 text-sm font-semibold tracking-wide uppercase mb-2">Browse</p>
               <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Shop by Category</h2>
             </div>
-
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
               {categories.map((cat, i) => (
                 <Link href={`/products?category=${cat.slug}`} key={cat.id}>
@@ -309,7 +316,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── FEATURED PRODUCTS ────────────────────────────────────── */}
+      {/* ── FEATURED PRODUCTS (60 % laptops · 20 % phones · 20 % acc) ── */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-end justify-between mb-10">
@@ -317,22 +324,18 @@ export default function Home() {
               <p className="text-orange-500 text-sm font-semibold tracking-wide uppercase mb-2">Handpicked For You</p>
               <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Featured Products</h2>
             </div>
-            <Link
-              href="/products"
-              className="hidden sm:flex items-center gap-1 text-blue-600 font-semibold text-sm hover:gap-2 transition-all duration-200"
-            >
+            <Link href="/products" className="hidden sm:flex items-center gap-1 text-blue-600 font-semibold text-sm hover:gap-2 transition-all duration-200">
               View all <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             {displayProducts.map((product, i) => (
               <div
                 key={product.id}
                 className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm card-hover animate-scale-in"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                style={{ animationDelay: `${i * 0.08}s` }}
               >
-                {/* Image */}
                 <div className="relative aspect-square overflow-hidden bg-slate-50">
                   {product.images?.[0] ? (
                     <img
@@ -341,39 +344,29 @@ export default function Home() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-6xl">📱</div>
+                    <div className="w-full h-full flex items-center justify-center text-6xl">💻</div>
                   )}
                   {product.compare_at_price && (
                     <DiscountBadge price={product.price} compareAt={product.compare_at_price} />
                   )}
-                  {/* Quick action */}
                   <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                     <button className="w-full bg-white/90 backdrop-blur text-slate-800 font-semibold text-xs py-2 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-white transition-colors">
                       <ShoppingCart className="h-3.5 w-3.5" /> Quick Add
                     </button>
                   </div>
                 </div>
-
-                {/* Info */}
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-800 text-sm line-clamp-2 leading-snug">{product.name}</h3>
-
                   <div className="flex items-center gap-2 mt-1.5">
                     <Stars rating={product.rating || 4.5} />
                     <span className="text-xs text-slate-400">({product.rating?.toFixed(1) || '4.5'})</span>
                   </div>
-
                   <div className="flex items-baseline gap-2 mt-2">
-                    <span className="text-blue-600 font-extrabold text-base">
-                      RWF {product.price.toLocaleString()}
-                    </span>
+                    <span className="text-blue-600 font-extrabold text-base">RWF {product.price.toLocaleString()}</span>
                     {product.compare_at_price && (
-                      <span className="text-slate-400 text-xs line-through">
-                        RWF {product.compare_at_price.toLocaleString()}
-                      </span>
+                      <span className="text-slate-400 text-xs line-through">RWF {product.compare_at_price.toLocaleString()}</span>
                     )}
                   </div>
-
                   <Link href={`/product/${product.slug}`}>
                     <button className="mt-3.5 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs py-2.5 rounded-xl shadow-md shadow-blue-500/20 hover:shadow-blue-500/40 transition-all duration-300">
                       View Details
@@ -386,42 +379,110 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── REAL ELECTRONICS SHOWCASE ─────────────────────────────── */}
+      {/* ── SHOWCASE TILES (60/20/20) ─────────────────────────────── */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-4 lg:px-6">
           <div className="text-center mb-10 animate-fade-in">
-            <p className="text-violet-600 text-sm font-semibold tracking-wide uppercase mb-2">Latest Arrivals</p>
-            <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Top Electronics Picks</h2>
-            <p className="text-slate-500 text-sm mt-2">Curated from the world&apos;s leading brands</p>
+            <p className="text-violet-600 text-sm font-semibold tracking-wide uppercase mb-2">Shop by Type</p>
+            <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Browse Our Catalogue</h2>
+            <p className="text-slate-500 text-sm mt-2">60 % Laptops · 20 % Phones · 20 % Accessories</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            {[
-              { label: 'Smartphones',  img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=320&fit=crop&q=80', accent: 'from-blue-500 to-blue-700' },
-              { label: 'Laptops',      img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=320&fit=crop&q=80', accent: 'from-indigo-500 to-indigo-700' },
-              { label: 'Headphones',   img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=320&fit=crop&q=80', accent: 'from-violet-500 to-violet-700' },
-              { label: 'Smart Watches',img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=320&fit=crop&q=80', accent: 'from-orange-500 to-rose-600' },
-            ].map(({ label, img, accent }, i) => (
-              <Link href="/products" key={label}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {SHOWCASES.map(({ label, img, accent, href }, i) => (
+              <Link href={href} key={label}>
                 <div
                   className="group relative rounded-2xl overflow-hidden aspect-[4/3] card-hover animate-scale-in"
-                  style={{ animationDelay: `${i * 0.1}s` }}
+                  style={{ animationDelay: `${i * 0.08}s` }}
                 >
-                  <img
-                    src={img}
-                    alt={label}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${accent} opacity-40 group-hover:opacity-55 transition-opacity duration-300`} />
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <p className="text-white font-bold text-sm drop-shadow-lg">{label}</p>
-                    <p className="text-white/80 text-xs mt-0.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
+                  <img src={img} alt={label} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${accent} opacity-40 group-hover:opacity-60 transition-opacity duration-300`} />
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <p className="text-white font-bold text-xs drop-shadow-lg">{label}</p>
+                    <p className="text-white/80 text-[10px] flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 mt-0.5">
                       Shop now <ArrowRight className="h-3 w-3" />
                     </p>
                   </div>
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── GAMIFICATION HUB ──────────────────────────────────────── */}
+      <section className="py-20 bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 relative overflow-hidden">
+        {/* Decorative glows */}
+        <div className="absolute top-0 left-1/3 h-80 w-80 rounded-full bg-indigo-600 blur-[130px] opacity-20 pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-violet-600 blur-[100px] opacity-20 pointer-events-none" />
+
+        <div className="container mx-auto px-4 lg:px-6 relative z-10">
+          {/* Section header */}
+          <div className="text-center mb-12">
+            <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white text-xs font-semibold px-4 py-2 rounded-full mb-5">
+              🎮 Gamified Shopping Experience
+            </span>
+            <h2 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight">Play. Shop. Win.</h2>
+            <p className="text-slate-400 text-base mt-3 max-w-lg mx-auto">
+              Spin daily for discounts, earn loyalty points on every purchase, and level up through exclusive tiers.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-10 items-start">
+
+            {/* ── Left: Spin Wheel ────────────────────────────────── */}
+            <div className="bg-white/8 backdrop-blur-sm border border-white/15 rounded-3xl p-7">
+              <div className="flex items-center gap-2 mb-1">
+                <Gift className="h-5 w-5 text-orange-400" />
+                <h3 className="text-white font-bold text-lg">Spin the Wheel</h3>
+              </div>
+              <p className="text-slate-400 text-sm mb-6">One free spin every day — win discounts or bonus points!</p>
+              <SpinWheel />
+            </div>
+
+            {/* ── Right: Loyalty Tiers + Stats ────────────────────── */}
+            <div className="space-y-5">
+              {/* Quick stats row */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: '🏆', value: '4 Tiers',   label: 'Loyalty Levels'  },
+                  { icon: '⭐', value: '1 pt',      label: 'per RWF 1,000'   },
+                  { icon: '🎁', value: '100 pts',   label: '= RWF 1,000 off' },
+                ].map(({ icon, value, label }) => (
+                  <div key={label} className="bg-white/8 border border-white/15 rounded-2xl p-4 text-center">
+                    <p className="text-2xl mb-1">{icon}</p>
+                    <p className="text-white font-extrabold text-sm">{value}</p>
+                    <p className="text-slate-400 text-[11px] mt-0.5">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tier cards */}
+              {TIERS.map(({ name, pts, color, bg, border, perks }) => (
+                <div
+                  key={name}
+                  className="flex items-center gap-4 bg-white/8 border border-white/15 rounded-2xl px-5 py-4 hover:bg-white/12 transition-colors"
+                >
+                  <div className={`h-10 w-10 rounded-xl ${bg} border ${border} flex items-center justify-center shrink-0`}>
+                    <Trophy className={`h-5 w-5 ${color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-bold text-sm">{name}</span>
+                      <span className="text-slate-400 text-xs">· {pts} pts</span>
+                    </div>
+                    <p className="text-slate-400 text-xs mt-0.5 truncate">{perks}</p>
+                  </div>
+                </div>
+              ))}
+
+              {/* CTA */}
+              <Link href="/account">
+                <button className="w-full mt-2 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 text-sm">
+                  View My Points & Achievements <ArrowRight className="h-4 w-4" />
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
