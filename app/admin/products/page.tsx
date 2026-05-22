@@ -94,6 +94,12 @@ export default function AdminProductsPage() {
           <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Add New Product
+            <Link href="/admin/products/bulk-upload">
+              <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Bulk Upload
+              </button>
+            </Link>
           </button>
         </Link>
       </div>
