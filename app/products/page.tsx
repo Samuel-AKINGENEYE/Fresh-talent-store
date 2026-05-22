@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { SlidersHorizontal, Grid3x3, List, X } from 'lucide-react';
+import { SlidersHorizontal, Grid3x3, List } from 'lucide-react';
 
 interface Product {
   id: number;
@@ -34,7 +34,6 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   
-  // Filter states
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 2000000 });
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -43,18 +42,21 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Get unique brands from products
-  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
+  const brands: string[] = [];
+  products.forEach(p => {
+    if (p.brand && !brands.includes(p.brand)) {
+      brands.push(p.brand);
+    }
+  });
 
   useEffect(() => {
     async function fetchData() {
-      // Fetch categories
       const { data: categoriesData } = await supabase
         .from('categories')
         .select('*')
         .order('name');
       setCategories(categoriesData || []);
 
-      // Fetch products with category info
       const { data: productsData } = await supabase
         .from('products')
         .select(`
@@ -65,7 +67,6 @@ export default function ProductsPage() {
       
       if (productsData) {
         setProducts(productsData);
-        // Set max price for filter
         const maxPrice = Math.max(...productsData.map(p => p.price), 2000000);
         setPriceRange(prev => ({ ...prev, max: maxPrice }));
       }
@@ -75,29 +76,23 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
-  // Apply filters and sorting
   useEffect(() => {
     let filtered = [...products];
 
-    // Apply category filter
     if (selectedCategory) {
       filtered = filtered.filter(p => p.category_id === selectedCategory);
     }
 
-    // Apply price filter
     filtered = filtered.filter(p => p.price >= priceRange.min && p.price <= priceRange.max);
 
-    // Apply brand filter
     if (selectedBrands.length > 0) {
       filtered = filtered.filter(p => p.brand && selectedBrands.includes(p.brand));
     }
 
-    // Apply rating filter
     if (minRating > 0) {
       filtered = filtered.filter(p => p.rating >= minRating);
     }
 
-    // Apply search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(p => 
@@ -106,7 +101,6 @@ export default function ProductsPage() {
       );
     }
 
-    // Apply sorting
     switch (sortBy) {
       case 'price_asc':
         filtered.sort((a, b) => a.price - b.price);
@@ -119,8 +113,6 @@ export default function ProductsPage() {
         break;
       case 'newest':
         filtered.sort((a, b) => b.id - a.id);
-        break;
-      default:
         break;
     }
 
@@ -156,16 +148,13 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Shop Electronics</h1>
           <p className="text-gray-600">Discover the best deals on premium electronics</p>
         </div>
 
-        {/* Search and Filter Bar */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search Input */}
             <div className="flex-1">
               <input
                 type="text"
@@ -176,7 +165,6 @@ export default function ProductsPage() {
               />
             </div>
             
-            {/* Sort Dropdown */}
             <select
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={sortBy}
@@ -188,19 +176,14 @@ export default function ProductsPage() {
               <option value="rating">Highest Rated</option>
             </select>
 
-            {/* Filter Toggle Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <SlidersHorizontal className="h-4 w-4" />
               Filters
-              {(selectedCategory || selectedBrands.length > 0 || minRating > 0) && (
-                <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">!</span>
-              )}
             </button>
 
-            {/* View Mode Toggle */}
             <div className="flex gap-2 border rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
@@ -218,7 +201,6 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Filters Panel */}
         {showFilters && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
@@ -229,7 +211,6 @@ export default function ProductsPage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Category Filter */}
               <div>
                 <h4 className="font-medium mb-2">Categories</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -258,7 +239,6 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* Price Range Filter */}
               <div>
                 <h4 className="font-medium mb-2">Price Range (RWF)</h4>
                 <div className="space-y-3">
@@ -278,7 +258,6 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* Brand Filter */}
               {brands.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">Brands</h4>
@@ -297,47 +276,19 @@ export default function ProductsPage() {
                   </div>
                 </div>
               )}
-
-              {/* Rating Filter */}
-              <div>
-                <h4 className="font-medium mb-2">Minimum Rating</h4>
-                <div className="flex gap-2">
-                  {[4, 3, 2, 1].map(rating => (
-                    <button
-                      key={rating}
-                      onClick={() => setMinRating(minRating === rating ? 0 : rating)}
-                      className={`px-3 py-1 rounded text-sm ${
-                        minRating === rating
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      {rating}+ ★
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         )}
 
-        {/* Results Count */}
         <div className="mb-4 flex justify-between items-center">
           <p className="text-gray-600">
             Showing {filteredProducts.length} of {products.length} products
           </p>
-          {(selectedCategory || selectedBrands.length > 0 || minRating > 0 || searchQuery) && (
-            <button onClick={clearFilters} className="text-sm text-blue-600 hover:text-blue-700">
-              Clear all filters
-            </button>
-          )}
         </div>
 
-        {/* Products Grid/List */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg">
             <p className="text-gray-500 text-lg">No products found</p>
-            <p className="text-gray-400 mt-2">Try adjusting your filters</p>
             <button onClick={clearFilters} className="mt-4 text-blue-600 hover:text-blue-700">
               Clear all filters
             </button>
@@ -357,7 +308,6 @@ export default function ProductsPage() {
   );
 }
 
-// Product Card Component
 function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid' | 'list' }) {
   const discount = product.compare_at_price 
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
@@ -369,11 +319,7 @@ function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid'
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition group flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-48 h-48 bg-gray-100 flex-shrink-0">
             {product.images?.[0] ? (
-              <img
-                src={product.images[0]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-4xl">📱</div>
             )}
@@ -383,31 +329,25 @@ function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid'
               </div>
             )}
           </div>
-          <div className="p-4 flex-1 flex flex-col">
-            <div>
-              <h3 className="font-semibold text-lg">{product.name}</h3>
-              <p className="text-sm text-gray-600">{product.category?.name}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-yellow-500">★</span>
-                <span className="text-sm font-medium">{product.rating || 4.5}</span>
-                <span className="text-xs text-gray-400">({product.review_count || 0} reviews)</span>
-              </div>
+          <div className="p-4 flex-1">
+            <h3 className="font-semibold text-lg">{product.name}</h3>
+            <p className="text-sm text-gray-600">{product.category?.name}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-yellow-500">★</span>
+              <span className="text-sm font-medium">{product.rating || 4.5}</span>
+              <span className="text-xs text-gray-400">({product.review_count || 0} reviews)</span>
             </div>
-            <div className="mt-auto pt-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-blue-600">
-                  RWF {product.price.toLocaleString()}
+            <div className="mt-2">
+              <span className="text-2xl font-bold text-blue-600">RWF {product.price.toLocaleString()}</span>
+              {product.compare_at_price && (
+                <span className="text-sm text-gray-400 line-through ml-2">
+                  RWF {product.compare_at_price.toLocaleString()}
                 </span>
-                {product.compare_at_price && (
-                  <span className="text-sm text-gray-400 line-through">
-                    RWF {product.compare_at_price.toLocaleString()}
-                  </span>
-                )}
-              </div>
-              <button className="mt-3 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
-                Add to Cart
-              </button>
+              )}
             </div>
+            <button className="mt-3 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+              Add to Cart
+            </button>
           </div>
         </div>
       </Link>
@@ -419,11 +359,7 @@ function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid'
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition group cursor-pointer">
         <div className="relative aspect-square bg-gray-100">
           {product.images?.[0] ? (
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-            />
+            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-6xl text-gray-400">📱</div>
           )}
@@ -442,16 +378,14 @@ function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid'
             <span className="text-xs text-gray-400">({product.review_count || 0})</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-blue-600">
-              RWF {product.price.toLocaleString()}
-            </span>
+            <span className="text-xl font-bold text-blue-600">RWF {product.price.toLocaleString()}</span>
             {product.compare_at_price && (
               <span className="text-xs text-gray-400 line-through">
                 {product.compare_at_price.toLocaleString()}
               </span>
             )}
           </div>
-          <button className="mt-3 w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition font-medium">
+          <button className="mt-3 w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600">
             Add to Cart
           </button>
         </div>

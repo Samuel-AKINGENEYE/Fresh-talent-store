@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Plus, Edit, Trash2, Eye, Search, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, Package, Upload } from 'lucide-react';
 
 interface Product {
   id: number;
@@ -87,24 +87,24 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Products</h1>
-        <Link href="/admin/products/new">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add New Product
-            <Link href="/admin/products/bulk-upload">
-              <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Bulk Upload
-              </button>
-            </Link>
-          </button>
-        </Link>
+        <div className="flex gap-3">
+          <Link href="/admin/products/bulk-upload">
+            <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Bulk Upload
+            </button>
+          </Link>
+          <Link href="/admin/products/new">
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add New Product
+            </button>
+          </Link>
+        </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
@@ -129,7 +129,6 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Products Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -152,8 +151,8 @@ export default function AdminProductsPage() {
                     <Link href="/admin/products/new" className="text-blue-600 hover:underline mt-2 inline-block">
                       Add your first product →
                     </Link>
-                  </td>
-                </tr>
+                   </td>
+                 </tr>
               ) : (
                 filteredProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50">

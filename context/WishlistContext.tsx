@@ -11,9 +11,7 @@ interface WishlistItem {
     name: string;
     slug: string;
     price: number;
-    compare_at_price: number | null;
     images: string[];
-    rating: number;
   };
 }
 
@@ -45,7 +43,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       .select(`
         id,
         product_id,
-        product:products(id, name, slug, price, compare_at_price, images, rating)
+        product:products(id, name, slug, price, images)
       `)
       .eq('user_id', user.id);
 
@@ -55,11 +53,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadWishlist();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       loadWishlist();
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -74,13 +70,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       .from('wishlists')
       .insert({ user_id: user.id, product_id: productId });
 
-    if (error) {
-      if (error.code === '23505') {
-        alert('Product already in wishlist');
-      } else {
-        alert('Error adding to wishlist: ' + error.message);
-      }
-    } else {
+    if (!error) {
       await loadWishlist();
       alert('Added to wishlist!');
     }
@@ -90,17 +80,13 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
+    await supabase
       .from('wishlists')
       .delete()
       .eq('user_id', user.id)
       .eq('product_id', productId);
-
-    if (error) {
-      alert('Error removing from wishlist: ' + error.message);
-    } else {
-      await loadWishlist();
-    }
+    
+    await loadWishlist();
   };
 
   const isInWishlist = (productId: number) => {
