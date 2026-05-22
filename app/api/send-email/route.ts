@@ -29,7 +29,7 @@ interface Order {
   created_at: string;
 }
 
-function buildOrderEmailHtml(order: Order, items: OrderItem[], address: Address, customerName: string): string {
+function buildOrderEmailHtml(order: Order, items: OrderItem[], address: Address, customerName: string, recipientEmail?: string): string {
   const itemsHtml = items.map(item => `
     <tr>
       <td style="padding:8px;border-bottom:1px solid #eee;">${item.product_name}</td>
@@ -110,7 +110,8 @@ function buildOrderEmailHtml(order: Order, items: OrderItem[], address: Address,
 
     <!-- Footer -->
     <div style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #e5e7eb;">
-      <p style="margin:0;color:#9ca3af;font-size:12px;">Fresh Talent Store · Kigali, Rwanda · freshtalentstore.rw</p>
+      <p style="margin:0 0 6px;color:#9ca3af;font-size:12px;">Fresh Talent Store · Kigali, Rwanda · freshtalentstore.rw</p>
+      ${recipientEmail ? `<p style="margin:0;font-size:11px;color:#d1d5db;">You're receiving this because you placed an order. <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://freshtalentstore.rw'}/api/newsletter/unsubscribe?email=${encodeURIComponent(recipientEmail)}" style="color:#9ca3af;">Unsubscribe</a></p>` : ''}
     </div>
   </div>
 </body>
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     const customerName = user.full_name || address?.full_name || 'Valued Customer';
-    const html = buildOrderEmailHtml(order, items || [], address, customerName);
+    const html = buildOrderEmailHtml(order, items || [], address, customerName, user.email);
 
     const { data, error } = await resend.emails.send({
       from: `Fresh Talent Store <${FROM}>`,
