@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { Check, Truck, CreditCard, ClipboardList, MapPin, Smartphone, Building2, ChevronRight } from 'lucide-react';
+import { Check, Truck, CreditCard, ClipboardList, MapPin, Smartphone, Building2, ChevronRight, Shield, Clock, MessageCircle } from 'lucide-react';
 
 type Step = 'address' | 'payment' | 'review';
 
@@ -17,6 +17,15 @@ export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  
+  // COD verification states
+  const [showCODVerification, setShowCODVerification] = useState(false);
+  const [codPhone, setCodPhone] = useState('');
+  const [codOtp, setCodOtp] = useState('');
+  const [codOtpSent, setCodOtpSent] = useState(false);
+  const [codOtpVerified, setCodOtpVerified] = useState(false);
+  const [codCountdown, setCodCountdown] = useState(0);
+  const [codError, setCodError] = useState('');
 
   // Address form state
   const [addressForm, setAddressForm] = useState({
@@ -39,6 +48,14 @@ export default function CheckoutPage() {
     }
   }, [items, router, loading]);
 
+  // Countdown timer for OTP
+  useEffect(() => {
+    if (codCountdown > 0) {
+      const timer = setTimeout(() => setCodCountdown(codCountdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [codCountdown]);
+
   // Load user addresses
   useEffect(() => {
     async function loadAddresses() {
@@ -58,6 +75,7 @@ export default function CheckoutPage() {
       const defaultAddress = data?.find(a => a.is_default);
       if (defaultAddress) {
         setSelectedAddressId(defaultAddress.id);
+        setCodPhone(defaultAddress.phone || '');
       }
     }
     loadAddresses();
@@ -81,7 +99,6 @@ export default function CheckoutPage() {
       alert('Error saving address: ' + error.message);
     } else {
       setShowAddressForm(false);
-      // Refresh addresses
       const { data } = await supabase
         .from('addresses')
         .select('*')
@@ -89,6 +106,7 @@ export default function CheckoutPage() {
       setAddresses(data || []);
       if (data?.[0]) {
         setSelectedAddressId(data[0].id);
+        setCodPhone(data[0].phone || '');
       }
       setAddressForm({
         full_name: '',
@@ -103,6 +121,64 @@ export default function CheckoutPage() {
     setLoading(false);
   };
 
+  // Send COD verification OTP
+  const sendCodOtp = async () => {
+    if (!codPhone || codPhone.length < 10) {
+      setCodError('Please enter a valid phone number');
+      return;
+    }
+
+    setLoading(true);
+    setCodError('');
+    
+    // Generate random 6-digit OTP (in production, this would be sent via SMS)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store OTP in localStorage for verification (in production, use Supabase or SMS service)
+    localStorage.setItem('cod_otp', otp);
+    localStorage.setItem('cod_otp_expiry', (Date.now() + 5 * 60 * 1000).toString());
+    
+    // Simulate SMS sending (in production, integrate with Africa's Talking API)
+    console.log(`[DEV] COD Verification OTP for ${codPhone}: ${otp}`);
+    
+    setCodOtpSent(true);
+    setCodCountdown(60);
+    alert(`Demo: Your OTP is ${otp} (in production, this will be sent via SMS)`);
+    setLoading(false);
+  };
+
+  // Verify COD OTP
+  const verifyCodOtp = async () => {
+    const storedOtp = localStorage.getItem('cod_otp');
+    const expiry = localStorage.getItem('cod_otp_expiry');
+    
+    if (!storedOtp || !expiry) {
+      setCodError('Please request a new OTP');
+      return;
+    }
+    
+    if (Date.now() > parseInt(expiry)) {
+      setCodError('OTP has expired. Please request a new one');
+      localStorage.removeItem('cod_otp');
+      localStorage.removeItem('cod_otp_expiry');
+      setCodOtpSent(false);
+      return;
+    }
+    
+    if (codOtp === storedOtp) {
+      setCodOtpVerified(true);
+      setShowCODVerification(false);
+      setCodError('');
+      // Clear OTP from storage
+      localStorage.removeItem('cod_otp');
+      localStorage.removeItem('cod_otp_expiry');
+      // Proceed to review step
+      setCurrentStep('review');
+    } else {
+      setCodError('Invalid OTP. Please try again');
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!selectedAddressId) {
       alert('Please select a delivery address');
@@ -112,18 +188,20 @@ export default function CheckoutPage() {
       alert('Please select a payment method');
       return;
     }
+    
+    // For COD, require phone verification
+    if (paymentMethod === 'cod' && !codOtpVerified) {
+      setShowCODVerification(true);
+      return;
+    }
 
     setLoading(true);
 
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Generate order number
     const orderNumber = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-    
-    // Get selected address
     const selectedAddress = addresses.find(a => a.id === selectedAddressId);
     
-    // Create order
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -132,11 +210,13 @@ export default function CheckoutPage() {
         address_id: selectedAddressId,
         status: 'pending',
         payment_method: paymentMethod,
-        payment_status: 'pending',
+        payment_status: paymentMethod === 'cod' ? 'pending' : 'pending',
         subtotal: subtotal,
         delivery_fee: deliveryFee,
         discount: 0,
         total: total,
+        guest_phone: selectedAddress?.phone,
+        guest_email: user?.email,
       })
       .select()
       .single();
@@ -147,7 +227,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Create order items
     const orderItems = items.map(item => ({
       order_id: order.id,
       product_id: item.product_id,
@@ -165,9 +244,7 @@ export default function CheckoutPage() {
     if (itemsError) {
       alert('Error creating order items: ' + itemsError.message);
     } else {
-      // Clear cart
       await clearCart();
-      // Redirect to confirmation
       router.push(`/checkout/confirmation?order=${order.id}`);
     }
 
@@ -252,7 +329,10 @@ export default function CheckoutPage() {
                             type="radio"
                             name="address"
                             checked={selectedAddressId === addr.id}
-                            onChange={() => setSelectedAddressId(addr.id)}
+                            onChange={() => {
+                              setSelectedAddressId(addr.id);
+                              setCodPhone(addr.phone || '');
+                            }}
                             className="mt-1"
                           />
                           <div className="flex-1">
@@ -372,17 +452,28 @@ export default function CheckoutPage() {
                   </h2>
                   
                   <div className="space-y-3">
-                    <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    {/* COD Option with details */}
+                    <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                       <input
                         type="radio"
                         name="payment"
                         value="cod"
                         checked={paymentMethod === 'cod'}
                         onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="mt-1"
                       />
                       <div className="flex-1">
-                        <div className="font-medium">Cash on Delivery (COD)</div>
+                        <div className="font-medium flex items-center gap-2">
+                          Cash on Delivery (COD)
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Recommended</span>
+                        </div>
                         <div className="text-sm text-gray-600">Pay when you receive your order</div>
+                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                          <Shield className="h-3 w-3" />
+                          Secure & verified
+                          <Clock className="h-3 w-3 ml-2" />
+                          Pay at delivery
+                        </div>
                       </div>
                     </label>
                     
@@ -393,6 +484,7 @@ export default function CheckoutPage() {
                         value="mtn_momo"
                         checked={paymentMethod === 'mtn_momo'}
                         onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="mt-1"
                       />
                       <div className="flex-1">
                         <div className="font-medium">MTN Mobile Money</div>
@@ -407,6 +499,7 @@ export default function CheckoutPage() {
                         value="airtel_money"
                         checked={paymentMethod === 'airtel_money'}
                         onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="mt-1"
                       />
                       <div className="flex-1">
                         <div className="font-medium">Airtel Money</div>
@@ -414,6 +507,22 @@ export default function CheckoutPage() {
                       </div>
                     </label>
                   </div>
+
+                  {/* COD Info Box */}
+                  {paymentMethod === 'cod' && (
+                    <div className="mt-4 bg-blue-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MessageCircle className="h-4 w-4 text-blue-600" />
+                        <span className="font-medium text-sm">How COD works:</span>
+                      </div>
+                      <ul className="text-xs text-gray-600 space-y-1 ml-6 list-disc">
+                        <li>You'll receive an SMS with verification code</li>
+                        <li>Verify your phone number to confirm the order</li>
+                        <li>Pay in cash when the delivery arrives</li>
+                        <li>Inspect the product before payment</li>
+                      </ul>
+                    </div>
+                  )}
 
                   <div className="flex gap-3 mt-6">
                     <button
@@ -423,12 +532,95 @@ export default function CheckoutPage() {
                       Back
                     </button>
                     <button
-                      onClick={() => setCurrentStep('review')}
+                      onClick={() => {
+                        if (paymentMethod === 'cod') {
+                          setShowCODVerification(true);
+                        } else {
+                          setCurrentStep('review');
+                        }
+                      }}
                       disabled={!paymentMethod}
                       className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 disabled:opacity-50"
                     >
-                      Review Order
+                      Continue
                       <ChevronRight className="inline h-4 w-4 ml-2" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* COD Verification Modal */}
+              {showCODVerification && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                    <div className="text-center mb-4">
+                      <Smartphone className="h-12 w-12 text-blue-600 mx-auto mb-2" />
+                      <h3 className="text-xl font-semibold">Verify Your Phone Number</h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        We'll send a verification code to confirm your order
+                      </p>
+                    </div>
+                    
+                    {!codOtpSent ? (
+                      <>
+                        <input
+                          type="tel"
+                          placeholder="Phone number (e.g., 0788 123 456)"
+                          value={codPhone}
+                          onChange={(e) => setCodPhone(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg mb-4"
+                        />
+                        {codError && <p className="text-red-600 text-sm mb-3">{codError}</p>}
+                        <button
+                          onClick={sendCodOtp}
+                          disabled={loading}
+                          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                        >
+                          Send Verification Code
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Enter 6-digit code"
+                          value={codOtp}
+                          onChange={(e) => setCodOtp(e.target.value)}
+                          className="w-full px-3 py-2 border rounded-lg mb-2"
+                          maxLength={6}
+                        />
+                        {codError && <p className="text-red-600 text-sm mb-3">{codError}</p>}
+                        <button
+                          onClick={verifyCodOtp}
+                          className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        >
+                          Verify & Continue
+                        </button>
+                        {codCountdown > 0 ? (
+                          <p className="text-center text-sm text-gray-500 mt-3">
+                            Resend code in {codCountdown}s
+                          </p>
+                        ) : (
+                          <button
+                            onClick={sendCodOtp}
+                            className="w-full text-blue-600 text-sm mt-3 hover:underline"
+                          >
+                            Resend Code
+                          </button>
+                        )}
+                      </>
+                    )}
+                    
+                    <button
+                      onClick={() => {
+                        setShowCODVerification(false);
+                        setCodOtpSent(false);
+                        setCodOtp('');
+                        setCodError('');
+                      }}
+                      className="w-full mt-3 text-gray-500 text-sm hover:text-gray-700"
+                    >
+                      Cancel
                     </button>
                   </div>
                 </div>
@@ -458,16 +650,21 @@ export default function CheckoutPage() {
                     <div className="border-b pb-3">
                       <h3 className="font-medium mb-2">Payment Method</h3>
                       <p className="text-sm text-gray-600 capitalize">{paymentMethod.replace('_', ' ')}</p>
+                      {paymentMethod === 'cod' && codOtpVerified && (
+                        <p className="text-xs text-green-600 mt-1">✓ Phone verified</p>
+                      )}
                     </div>
                     
                     <div>
-                      <h3 className="font-medium mb-2">Order Items</h3>
-                      {items.map((item) => (
-                        <div key={item.id} className="flex justify-between text-sm py-1">
-                          <span>{item.product?.name} x{item.quantity}</span>
-                          <span>RWF {((item.product?.price || 0) + (item.variant?.price_adjustment || 0) * item.quantity).toLocaleString()}</span>
-                        </div>
-                      ))}
+                      <h3 className="font-medium mb-2">Order Items ({items.length})</h3>
+                      <div className="space-y-2">
+                        {items.map((item) => (
+                          <div key={item.id} className="flex justify-between text-sm py-1">
+                            <span>{item.product?.name} x{item.quantity}</span>
+                            <span>RWF {((item.product?.price || 0) + (item.variant?.price_adjustment || 0)) * item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -516,6 +713,16 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
+
+              {paymentMethod === 'cod' && (
+                <div className="bg-green-50 rounded-lg p-3 mt-4">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-700">Pay on Delivery</span>
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">No payment needed now</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
