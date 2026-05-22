@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { Check, Truck, CreditCard, ClipboardList, MapPin, Smartphone, Building2, ChevronRight, Shield, Clock, MessageCircle } from 'lucide-react';
+import { FlutterwaveButton } from '@/components/checkout/FlutterwaveButton';
 
 type Step = 'address' | 'payment' | 'review';
 
@@ -40,6 +41,8 @@ export default function CheckoutPage() {
 
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [showFlutterwave, setShowFlutterwave] = useState(false);
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -179,29 +182,11 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePlaceOrder = async () => {
-    if (!selectedAddressId) {
-      alert('Please select a delivery address');
-      return;
-    }
-    if (!paymentMethod) {
-      alert('Please select a payment method');
-      return;
-    }
-    
-    // For COD, require phone verification
-    if (paymentMethod === 'cod' && !codOtpVerified) {
-      setShowCODVerification(true);
-      return;
-    }
-
-    setLoading(true);
-
+  const createOrderInDB = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    
     const orderNumber = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
     const selectedAddress = addresses.find(a => a.id === selectedAddressId);
-    
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -210,7 +195,7 @@ export default function CheckoutPage() {
         address_id: selectedAddressId,
         status: 'pending',
         payment_method: paymentMethod,
-        payment_status: paymentMethod === 'cod' ? 'pending' : 'pending',
+        payment_status: 'pending',
         subtotal: subtotal,
         delivery_fee: deliveryFee,
         discount: 0,
@@ -221,11 +206,7 @@ export default function CheckoutPage() {
       .select()
       .single();
 
-    if (orderError) {
-      alert('Error creating order: ' + orderError.message);
-      setLoading(false);
-      return;
-    }
+    if (orderError) throw new Error(orderError.message);
 
     const orderItems = items.map(item => ({
       order_id: order.id,
@@ -237,18 +218,64 @@ export default function CheckoutPage() {
       product_image: item.product?.images?.[0] || '',
     }));
 
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
+    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+    if (itemsError) throw new Error(itemsError.message);
 
-    if (itemsError) {
-      alert('Error creating order items: ' + itemsError.message);
-    } else {
-      await clearCart();
-      router.push(`/checkout/confirmation?order=${order.id}`);
+    return order;
+  };
+
+  const handleFlutterwaveSuccess = async (transactionId: number) => {
+    if (!pendingOrderId) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/payment/flutterwave/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction_id: transactionId, order_id: pendingOrderId }),
+      });
+      if (res.ok) {
+        await clearCart();
+        router.push(`/checkout/confirmation?order=${pendingOrderId}`);
+      } else {
+        alert('Payment verification failed. Please contact support with transaction ID: ' + transactionId);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!selectedAddressId) {
+      alert('Please select a delivery address');
+      return;
+    }
+    if (!paymentMethod) {
+      alert('Please select a payment method');
+      return;
     }
 
-    setLoading(false);
+    if (paymentMethod === 'cod' && !codOtpVerified) {
+      setShowCODVerification(true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const order = await createOrderInDB();
+
+      if (paymentMethod === 'cod') {
+        await clearCart();
+        router.push(`/checkout/confirmation?order=${order.id}`);
+      } else {
+        // MoMo / Airtel: store order ID and show Flutterwave
+        setPendingOrderId(order.id);
+        setShowFlutterwave(true);
+        setLoading(false);
+      }
+    } catch (err: any) {
+      alert('Error creating order: ' + err.message);
+      setLoading(false);
+    }
   };
 
   const steps = [
@@ -669,20 +696,49 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={() => setCurrentStep('payment')}
-                      className="px-6 py-2 border rounded-lg hover:bg-gray-50"
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={handlePlaceOrder}
-                      disabled={loading}
-                      className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
-                    >
-                      {loading ? 'Placing Order...' : 'Place Order'}
-                    </button>
+                    {!showFlutterwave && (
+                      <>
+                        <button
+                          onClick={() => setCurrentStep('payment')}
+                          className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                        >
+                          Back
+                        </button>
+                        <button
+                          onClick={handlePlaceOrder}
+                          disabled={loading}
+                          className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {loading ? 'Placing Order…' : 'Place Order'}
+                        </button>
+                      </>
+                    )}
                   </div>
+
+                  {showFlutterwave && pendingOrderId && (
+                    <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                      <p className="text-sm font-medium text-blue-800 mb-3">
+                        Complete payment via {paymentMethod === 'mtn_momo' ? 'MTN Mobile Money' : 'Airtel Money'}
+                      </p>
+                      <FlutterwaveButton
+                        amount={total}
+                        email={addresses.find(a => a.id === selectedAddressId)?.email ?? 'customer@freshtalent.rw'}
+                        phone={addresses.find(a => a.id === selectedAddressId)?.phone ?? ''}
+                        name={addresses.find(a => a.id === selectedAddressId)?.full_name ?? 'Customer'}
+                        orderId={pendingOrderId}
+                        paymentMethod={paymentMethod as 'mtn_momo' | 'airtel_money'}
+                        onSuccess={handleFlutterwaveSuccess}
+                        onFailure={() => alert('Payment failed. Please try again or choose a different method.')}
+                        disabled={loading}
+                      />
+                      <button
+                        onClick={() => { setShowFlutterwave(false); setPendingOrderId(null); }}
+                        className="w-full mt-2 text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        Cancel and go back
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

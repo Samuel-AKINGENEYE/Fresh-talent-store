@@ -3,16 +3,20 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
+interface WishlistProduct {
+  id: number;
+  name: string;
+  slug: string;
+  price: number;
+  compare_at_price: number | null;
+  images: string[];
+  rating: number;
+}
+
 interface WishlistItem {
   id: number;
   product_id: number;
-  product?: {
-    id: number;
-    name: string;
-    slug: string;
-    price: number;
-    images: string[];
-  };
+  product?: WishlistProduct;
 }
 
 interface WishlistContextType {
@@ -43,11 +47,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       .select(`
         id,
         product_id,
-        product:products(id, name, slug, price, images)
+        product:products(id, name, slug, price, compare_at_price, images, rating)
       `)
       .eq('user_id', user.id);
 
-    setItems(data || []);
+    // Supabase returns the relation as an array; normalise to a single object
+    const normalised: WishlistItem[] = (data ?? []).map((row: any) => ({
+      ...row,
+      product: Array.isArray(row.product) ? row.product[0] : row.product,
+    }));
+
+    setItems(normalised);
     setLoading(false);
   };
 
@@ -70,9 +80,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       .from('wishlists')
       .insert({ user_id: user.id, product_id: productId });
 
+    if (error?.code === '23505') {
+      // Already in wishlist — silently ignore duplicates
+      return;
+    }
     if (!error) {
       await loadWishlist();
-      alert('Added to wishlist!');
     }
   };
 
@@ -85,25 +98,15 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       .delete()
       .eq('user_id', user.id)
       .eq('product_id', productId);
-    
+
     await loadWishlist();
   };
 
-  const isInWishlist = (productId: number) => {
-    return items.some(item => item.product_id === productId);
-  };
-
+  const isInWishlist = (productId: number) => items.some(item => item.product_id === productId);
   const totalItems = items.length;
 
   return (
-    <WishlistContext.Provider value={{
-      items,
-      addToWishlist,
-      removeFromWishlist,
-      isInWishlist,
-      totalItems,
-      loading
-    }}>
+    <WishlistContext.Provider value={{ items, addToWishlist, removeFromWishlist, isInWishlist, totalItems, loading }}>
       {children}
     </WishlistContext.Provider>
   );
@@ -111,8 +114,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
 export function useWishlist() {
   const context = useContext(WishlistContext);
-  if (context === undefined) {
-    throw new Error('useWishlist must be used within a WishlistProvider');
-  }
+  if (context === undefined) throw new Error('useWishlist must be used within a WishlistProvider');
   return context;
 }

@@ -209,7 +209,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
       .insert({ review_id: reviewId, user_id: user.id });
     
     if (!error) {
-      setUserHelpfulVotes(prev => new Set([...prev, reviewId]));
+      setUserHelpfulVotes(prev => new Set(Array.from(prev).concat(reviewId)));
       await supabase
         .from('reviews')
         .update({ helpful_count: reviews.find(r => r.id === reviewId)?.helpful_count! + 1 })

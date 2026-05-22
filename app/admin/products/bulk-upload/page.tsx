@@ -46,18 +46,17 @@ MacBook Air M3,Lightning fast laptop,1850000,1950000,5,Laptops,Apple,true,https:
       const product: any = {};
       
       headers.forEach((header, index) => {
-        let value = values[index] || '';
-        
-        // Convert boolean strings
-        if (value === 'true') value = true;
-        if (value === 'false') value = false;
-        if (value === '') value = null;
-        
-        // Convert numbers
+        const raw = values[index] || '';
+        let value: string | boolean | number | null = raw;
+
+        if (raw === 'true') value = true;
+        else if (raw === 'false') value = false;
+        else if (raw === '') value = null;
+
         if (header === 'price' || header === 'compare_at_price' || header === 'stock') {
-          value = value ? parseInt(value) : null;
+          value = raw ? parseInt(raw, 10) : null;
         }
-        
+
         product[header] = value;
       });
       
