@@ -1,0 +1,30 @@
+{
+  "Home": {
+    "title": "Fresh Talent Store",
+    "tagline": "Ikoranabuhanga. Rishya. Kuri Wewe.",
+    "description": "Ibikoresho bya elegitoroniki bihanitse byohererezwa i Kigali, Rwanda",
+    "shopNow": "Gura Nonaha",
+    "categories": "Gura ukurikije Ibyiciro"
+  },
+  "Product": {
+    "addToCart": "Ongera mu Igikapu",
+    "outOfStock": "Nta Bicuruzwa",
+    "inStock": "Biraboneka",
+    "reviews": "ibitekerezo",
+    "description": "Ibisobanuro",
+    "specifications": "Ibiranga"
+  },
+  "Cart": {
+    "title": "Igikapu",
+    "empty": "Igikapu cyawe ni ubusa",
+    "subtotal": "Igiteranyo",
+    "checkout": "Komeza Kwishyura"
+  },
+  "Auth": {
+    "login": "Injira",
+    "register": "Fungua Konti",
+    "logout": "Sohora",
+    "email": "Aderesi ya Imeli",
+    "password": "Ijambobanga"
+  }
+}

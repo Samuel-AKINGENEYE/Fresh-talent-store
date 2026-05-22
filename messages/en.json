@@ -1,0 +1,30 @@
+{
+  "Home": {
+    "title": "Fresh Talent Store",
+    "tagline": "Tech. Fresh. For You.",
+    "description": "Premium electronics delivered fast in Kigali, Rwanda",
+    "shopNow": "Shop Now",
+    "categories": "Shop by Category"
+  },
+  "Product": {
+    "addToCart": "Add to Cart",
+    "outOfStock": "Out of Stock",
+    "inStock": "In Stock",
+    "reviews": "reviews",
+    "description": "Description",
+    "specifications": "Specifications"
+  },
+  "Cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "subtotal": "Subtotal",
+    "checkout": "Proceed to Checkout"
+  },
+  "Auth": {
+    "login": "Sign In",
+    "register": "Create Account",
+    "logout": "Sign Out",
+    "email": "Email Address",
+    "password": "Password"
+  }
+}
