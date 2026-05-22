@@ -1,0 +1,16 @@
+
+  const sendOrderStatusSMS = async (phone: string, orderNumber: string, status: string, total: number) => {
+    try {
+      await fetch('/api/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone,
+          type: 'order_status',
+          data: { orderNumber, status, total }
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to send SMS:', error);
+    }
+  };
