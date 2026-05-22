@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Star, ThumbsUp, User, Calendar, CheckCircle } from 'lucide-react';
+import { Star, ThumbsUp, User, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Review {
   id: number;
@@ -28,43 +28,65 @@ export default function ProductReviews({ productId, productName }: ProductReview
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [hasPurchased, setHasPurchased] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [userHelpfulVotes, setUserHelpfulVotes] = useState<Set<number>>(new Set());
+  const [sortBy, setSortBy] = useState('helpful');
+  const [error, setError] = useState('');
   
+  // Review form state
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
   
+  // Stats
   const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
   const [ratingCounts, setRatingCounts] = useState({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
 
   useEffect(() => {
     loadReviews();
     checkUserAndPurchase();
     loadUserHelpfulVotes();
-  }, [productId]);
+  }, [productId, sortBy]);
 
   const loadReviews = async () => {
-    const { data } = await supabase
+    setLoading(true);
+    
+    let query = supabase
       .from('reviews')
       .select(`
         *,
         user:profiles(full_name)
       `)
-      .eq('product_id', productId)
-      .order('helpful_count', { ascending: false })
-      .order('created_at', { ascending: false });
+      .eq('product_id', productId);
+    
+    // Apply sorting
+    if (sortBy === 'helpful') {
+      query = query.order('helpful_count', { ascending: false });
+    } else if (sortBy === 'newest') {
+      query = query.order('created_at', { ascending: false });
+    } else if (sortBy === 'highest') {
+      query = query.order('rating', { ascending: false });
+    } else if (sortBy === 'lowest') {
+      query = query.order('rating', { ascending: true });
+    }
+    
+    const { data } = await query;
     
     if (data) {
       setReviews(data);
+      setTotalReviews(data.length);
       
-      const total = data.length;
+      // Calculate statistics
       const sum = data.reduce((acc, r) => acc + r.rating, 0);
-      setAverageRating(total > 0 ? sum / total : 0);
+      setAverageRating(totalReviews > 0 ? sum / totalReviews : 0);
       
       const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-      data.forEach(r => counts[r.rating as keyof typeof counts]++);
+      data.forEach(r => {
+        counts[r.rating as keyof typeof counts]++;
+      });
       setRatingCounts(counts);
     }
     setLoading(false);
@@ -75,6 +97,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
     setUser(user);
     
     if (user) {
+      // Check if user purchased this product
       const { data: orders } = await supabase
         .from('order_items')
         .select('order_id')
@@ -82,6 +105,18 @@ export default function ProductReviews({ productId, productName }: ProductReview
       
       if (orders && orders.length > 0) {
         setHasPurchased(true);
+      }
+      
+      // Check if user already reviewed
+      const { data: existingReview } = await supabase
+        .from('reviews')
+        .select('id')
+        .eq('product_id', productId)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (existingReview) {
+        setHasReviewed(true);
       }
     }
   };
@@ -103,26 +138,36 @@ export default function ProductReviews({ productId, productName }: ProductReview
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      alert('Please login to leave a review');
+      setError('Please login to leave a review');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    
+    if (!title.trim() || !comment.trim()) {
+      setError('Please fill in all fields');
+      setTimeout(() => setError(''), 3000);
       return;
     }
     
     setSubmitting(true);
+    setError('');
     
-    const { error } = await supabase
+    const { error: insertError } = await supabase
       .from('reviews')
       .insert({
         product_id: productId,
         user_id: user.id,
         rating,
-        title,
-        comment,
+        title: title.trim(),
+        comment: comment.trim(),
         is_verified_purchase: hasPurchased,
       });
     
-    if (error) {
-      alert('Error submitting review: ' + error.message);
+    if (insertError) {
+      setError(insertError.message);
+      setTimeout(() => setError(''), 3000);
     } else {
+      // Update product average rating
       const { data: allReviews } = await supabase
         .from('reviews')
         .select('rating')
@@ -136,11 +181,11 @@ export default function ProductReviews({ productId, productName }: ProductReview
         .update({ avg_rating: newAvg, review_count: newCount })
         .eq('id', productId);
       
-      alert('Review submitted successfully!');
       setShowForm(false);
       setTitle('');
       setComment('');
       setRating(5);
+      setHasReviewed(true);
       loadReviews();
     }
     setSubmitting(false);
@@ -148,13 +193,14 @@ export default function ProductReviews({ productId, productName }: ProductReview
 
   const handleHelpful = async (reviewId: number) => {
     if (!user) {
-      alert('Please login to mark as helpful');
+      setError('Please login to mark as helpful');
+      setTimeout(() => setError(''), 3000);
       return;
     }
     
-    // Check if user already voted
     if (userHelpfulVotes.has(reviewId)) {
-      alert('You have already marked this review as helpful');
+      setError('You already marked this as helpful');
+      setTimeout(() => setError(''), 3000);
       return;
     }
     
@@ -164,32 +210,22 @@ export default function ProductReviews({ productId, productName }: ProductReview
     
     if (!error) {
       setUserHelpfulVotes(prev => new Set([...prev, reviewId]));
-      
-      // Update helpful count
-      const currentReview = reviews.find(r => r.id === reviewId);
-      if (currentReview) {
-        await supabase
-          .from('reviews')
-          .update({ helpful_count: currentReview.helpful_count + 1 })
-          .eq('id', reviewId);
-        loadReviews();
-      }
-    } else if (error.code === '23505') {
-      alert('You have already marked this review as helpful');
-    } else {
-      alert('Error marking as helpful: ' + error.message);
+      await supabase
+        .from('reviews')
+        .update({ helpful_count: reviews.find(r => r.id === reviewId)?.helpful_count! + 1 })
+        .eq('id', reviewId);
+      loadReviews();
     }
   };
 
-  const renderStars = (rating: number, size: number = 4) => {
+  const renderStars = (rating: number, size: number = 16) => {
     return (
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`h-${size} w-${size} ${
-              star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-            }`}
+            style={{ width: size, height: size }}
+            className={star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
           />
         ))}
       </div>
@@ -198,8 +234,10 @@ export default function ProductReviews({ productId, productName }: ProductReview
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="bg-white rounded-lg shadow p-8">
+        <div className="flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     );
   }
@@ -208,12 +246,20 @@ export default function ProductReviews({ productId, productName }: ProductReview
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-xl font-semibold mb-4">Customer Reviews</h3>
       
+      {/* Error message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <span className="text-sm text-red-600">{error}</span>
+        </div>
+      )}
+      
       {/* Review Summary */}
       <div className="flex flex-col md:flex-row gap-8 mb-8 pb-8 border-b">
         <div className="text-center">
           <div className="text-5xl font-bold text-blue-600">{averageRating.toFixed(1)}</div>
-          <div className="flex justify-center my-2">{renderStars(Math.round(averageRating), 5)}</div>
-          <div className="text-sm text-gray-500">{reviews.length} reviews</div>
+          <div className="flex justify-center my-2">{renderStars(Math.round(averageRating), 20)}</div>
+          <div className="text-sm text-gray-500">{totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}</div>
         </div>
         
         <div className="flex-1 space-y-1">
@@ -222,8 +268,8 @@ export default function ProductReviews({ productId, productName }: ProductReview
               <span className="text-sm w-8">{star} ★</span>
               <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-yellow-400 rounded-full"
-                  style={{ width: `${(ratingCounts[star as keyof typeof ratingCounts] / (reviews.length || 1)) * 100}%` }}
+                  className="h-full bg-yellow-400 rounded-full transition-all duration-300"
+                  style={{ width: totalReviews > 0 ? `${(ratingCounts[star as keyof typeof ratingCounts] / totalReviews) * 100}%` : '0%' }}
                 />
               </div>
               <span className="text-sm text-gray-500 w-12">{ratingCounts[star as keyof typeof ratingCounts]}</span>
@@ -231,7 +277,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
           ))}
         </div>
         
-        {hasPurchased && !reviews.some(r => r.user_id === user?.id) && (
+        {hasPurchased && !hasReviewed && !showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap"
@@ -254,7 +300,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
-                  className="focus:outline-none"
+                  className="focus:outline-none transition-transform hover:scale-110"
                 >
                   <Star className={`h-8 w-8 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                 </button>
@@ -286,6 +332,13 @@ export default function ProductReviews({ productId, productName }: ProductReview
             />
           </div>
           
+          {hasPurchased && (
+            <div className="mb-3 flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-4 w-4" />
+              <span className="text-sm">Verified purchase - Your review will be marked as verified</span>
+            </div>
+          )}
+          
           <div className="flex gap-3">
             <button
               type="submit"
@@ -306,15 +359,21 @@ export default function ProductReviews({ productId, productName }: ProductReview
       )}
       
       {/* Sort Options */}
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-medium">All Reviews</h4>
-        <select className="text-sm border rounded-lg px-2 py-1">
-          <option value="helpful">Most Helpful</option>
-          <option value="newest">Newest First</option>
-          <option value="highest">Highest Rated</option>
-          <option value="lowest">Lowest Rated</option>
-        </select>
-      </div>
+      {reviews.length > 0 && (
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="font-medium">All Reviews</h4>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="text-sm border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="helpful">Most Helpful</option>
+            <option value="newest">Newest First</option>
+            <option value="highest">Highest Rated</option>
+            <option value="lowest">Lowest Rated</option>
+          </select>
+        </div>
+      )}
       
       {/* Reviews List */}
       <div className="space-y-6">
