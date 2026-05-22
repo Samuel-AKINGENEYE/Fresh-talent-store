@@ -5,12 +5,24 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+interface Address {
+  id: number;
+  full_name: string;
+  phone: string;
+  address_line1: string;
+  address_line2: string | null;
+  city: string;
+  sector: string | null;
+  is_default: boolean;
+}
+
 export default function AddressesPage() {
   const router = useRouter();
-  const [addresses, setAddresses] = useState<any[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -22,13 +34,15 @@ export default function AddressesPage() {
   });
 
   useEffect(() => {
-    async function loadAddresses() {
+    async function loadUserAndAddresses() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         router.push('/login');
         return;
       }
+      
+      setUserId(user.id);
       
       const { data: addresses } = await supabase
         .from('addresses')
@@ -40,19 +54,19 @@ export default function AddressesPage() {
       setLoading(false);
     }
     
-    loadAddresses();
+    loadUserAndAddresses();
   }, [router]);
 
   const handleSave = async () => {
-    setSaving(true);
+    if (!userId) return;
     
-    const { data: { user } } = await supabase.auth.getUser();
+    setSaving(true);
     
     const { error } = await supabase
       .from('addresses')
       .insert({
         ...formData,
-        user_id: user.id,
+        user_id: userId,
       });
     
     if (error) {
@@ -72,7 +86,7 @@ export default function AddressesPage() {
       const { data: newAddresses } = await supabase
         .from('addresses')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
       setAddresses(newAddresses || []);
     }
     setSaving(false);
