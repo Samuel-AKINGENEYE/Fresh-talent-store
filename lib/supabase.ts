@@ -132,3 +132,50 @@ export type Database = {
     };
   };
 };
+
+// Profile helper functions
+export async function getUserProfile(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function updateUserProfile(userId: string, updates: { full_name?: string; phone?: string }) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+// Address helper functions
+export async function getUserAddresses(userId: string) {
+  const { data, error } = await supabase
+    .from('addresses')
+    .select('*')
+    .eq('user_id', userId)
+    .order('is_default', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function addAddress(userId: string, address: any) {
+  const { data, error } = await supabase
+    .from('addresses')
+    .insert({ ...address, user_id: userId })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
