@@ -18,35 +18,30 @@ interface LowStockProduct {
 export default function LowStockAlert() {
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
   const [criticalStockProducts, setCriticalStockProducts] = useState<LowStockProduct[]>([]);
-  const [threshold, setThreshold] = useState(10);
+  const [threshold, setThreshold] = useState(5);
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
-    loadLowStockProducts();
-    // Load threshold from localStorage
-    const savedThreshold = localStorage.getItem('stockThreshold');
-    if (savedThreshold) {
-      setThreshold(parseInt(savedThreshold));
-    }
+    // Load threshold first, then fetch products with the correct value
+    const saved = localStorage.getItem('stockThreshold');
+    const t = saved ? parseInt(saved, 10) : 5;
+    setThreshold(t);
+    loadLowStockProducts(t);
   }, []);
 
-  const loadLowStockProducts = async () => {
+  const loadLowStockProducts = async (t = threshold) => {
     setLoading(true);
-    
-    // Get products with stock below threshold
     const { data } = await supabase
       .from('products')
       .select('id, name, slug, stock, price, images')
-      .lt('stock', threshold)
+      .lt('stock', t)
       .order('stock', { ascending: true });
-    
+
     if (data) {
-      const withThreshold = data.map(p => ({ ...p, threshold }));
-      const critical = withThreshold.filter(p => p.stock <= 3);
-      const low = withThreshold.filter(p => p.stock > 3 && p.stock <= threshold);
-      setCriticalStockProducts(critical);
-      setLowStockProducts(low);
+      const withThreshold = data.map(p => ({ ...p, threshold: t }));
+      setCriticalStockProducts(withThreshold.filter(p => p.stock <= 3));
+      setLowStockProducts(withThreshold.filter(p => p.stock > 3 && p.stock <= t));
     }
     setLoading(false);
   };
@@ -54,7 +49,7 @@ export default function LowStockAlert() {
   const updateThreshold = (newThreshold: number) => {
     setThreshold(newThreshold);
     localStorage.setItem('stockThreshold', newThreshold.toString());
-    loadLowStockProducts();
+    loadLowStockProducts(newThreshold);
     setShowSettings(false);
   };
 
