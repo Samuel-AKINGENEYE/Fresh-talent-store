@@ -60,6 +60,11 @@ export function Header() {
           </nav>
 
           <div className="flex items-center space-x-2">
+            <Link href="/wishlist">
+              <button className="relative rounded-full p-2 hover:bg-gray-100">
+                <Heart className="h-5 w-5" />
+              </button>
+            </Link>
             <Link href="/cart">
               <button className="relative rounded-full p-2 hover:bg-gray-100">
                 <ShoppingCart className="h-5 w-5" />
