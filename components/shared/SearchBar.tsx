@@ -12,7 +12,7 @@ interface Suggestion {
   slug: string;
   price: number;
   images: string[];
-  category: { name: string } | null;
+  category: { name: string }[] | null;
 }
 
 export function SearchBar({ className = '' }: { className?: string }) {
@@ -145,7 +145,7 @@ export function SearchBar({ className = '' }: { className?: string }) {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{s.name}</p>
                         <p className="text-xs text-gray-500">
-                          {s.category?.name} · RWF {s.price.toLocaleString()}
+                          {(Array.isArray(s.category) ? (s.category as { name: string }[])[0]?.name : (s.category as { name: string } | null)?.name) ?? ''} · RWF {s.price.toLocaleString()}
                         </p>
                       </div>
                     </Link>
