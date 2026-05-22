@@ -131,3 +131,10 @@ export function Header() {
     </header>
   );
 }
+
+// Add language switcher in header
+// Add this to the actions section:
+// <select className="text-sm border rounded px-2 py-1">
+//   <option value="en">EN</option>
+//   <option value="rw">RW</option>
+// </select>
