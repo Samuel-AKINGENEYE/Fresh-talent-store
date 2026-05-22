@@ -81,7 +81,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
       
       // Calculate statistics
       const sum = data.reduce((acc, r) => acc + r.rating, 0);
-      setAverageRating(totalReviews > 0 ? sum / totalReviews : 0);
+      setAverageRating(data.length > 0 ? sum / data.length : 0);
       
       const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
       data.forEach(r => {
@@ -97,14 +97,22 @@ export default function ProductReviews({ productId, productName }: ProductReview
     setUser(user);
     
     if (user) {
-      // Check if user purchased this product
-      const { data: orders } = await supabase
-        .from('order_items')
-        .select('order_id')
-        .eq('product_id', productId);
-      
-      if (orders && orders.length > 0) {
-        setHasPurchased(true);
+      // Check if the current user purchased this product (via their delivered orders)
+      const { data: userOrders } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('user_id', user.id)
+        .in('status', ['delivered', 'completed']);
+
+      if (userOrders && userOrders.length > 0) {
+        const orderIds = userOrders.map(o => o.id);
+        const { data: purchased } = await supabase
+          .from('order_items')
+          .select('id')
+          .eq('product_id', productId)
+          .in('order_id', orderIds)
+          .limit(1);
+        if (purchased && purchased.length > 0) setHasPurchased(true);
       }
       
       // Check if user already reviewed
@@ -143,8 +151,20 @@ export default function ProductReviews({ productId, productName }: ProductReview
       return;
     }
     
-    if (!title.trim() || !comment.trim()) {
-      setError('Please fill in all fields');
+    if (!hasPurchased) {
+      setError('Only verified buyers can leave a review');
+      setTimeout(() => setError(''), 4000);
+      return;
+    }
+
+    if (!title.trim()) {
+      setError('Please add a title for your review');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (comment.trim().length < 20) {
+      setError('Review must be at least 20 characters long');
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -207,13 +227,22 @@ export default function ProductReviews({ productId, productName }: ProductReview
     const { error } = await supabase
       .from('review_helpful_votes')
       .insert({ review_id: reviewId, user_id: user.id });
-    
+
+    if (error?.code === '23505') {
+      // DB unique constraint — already voted (shouldn't reach here but handle gracefully)
+      setUserHelpfulVotes(prev => new Set(Array.from(prev).concat(reviewId)));
+      return;
+    }
+
     if (!error) {
       setUserHelpfulVotes(prev => new Set(Array.from(prev).concat(reviewId)));
-      await supabase
-        .from('reviews')
-        .update({ helpful_count: reviews.find(r => r.id === reviewId)?.helpful_count! + 1 })
-        .eq('id', reviewId);
+      const current = reviews.find(r => r.id === reviewId);
+      if (current) {
+        await supabase
+          .from('reviews')
+          .update({ helpful_count: (current.helpful_count ?? 0) + 1 })
+          .eq('id', reviewId);
+      }
       loadReviews();
     }
   };
@@ -321,15 +350,21 @@ export default function ProductReviews({ productId, productName }: ProductReview
           </div>
           
           <div className="mb-3">
-            <label className="block text-sm font-medium mb-1">Review</label>
+            <label className="block text-sm font-medium mb-1">
+              Review <span className="text-gray-400 font-normal">(min 20 characters)</span>
+            </label>
             <textarea
               required
               rows={4}
+              minLength={20}
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Share your experience with this product"
+              placeholder="Share your experience with this product (at least 20 characters)"
             />
+            <p className={`text-xs mt-1 ${comment.length >= 20 ? 'text-green-600' : 'text-gray-400'}`}>
+              {comment.length}/20 minimum characters
+            </p>
           </div>
           
           {hasPurchased && (
