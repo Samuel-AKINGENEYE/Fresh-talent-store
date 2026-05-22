@@ -12,9 +12,18 @@ export async function POST(request: NextRequest) {
     const webhookSecret = process.env.FLUTTERWAVE_WEBHOOK_SECRET;
     const signature = request.headers.get('verif-hash');
 
-    // Validate webhook signature
-    if (webhookSecret && signature !== webhookSecret) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    // Validate webhook signature using constant-time comparison to prevent timing attacks
+    if (webhookSecret) {
+      if (!signature) {
+        return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+      }
+      const secretBuf = Buffer.from(webhookSecret, 'utf8');
+      const sigBuf = Buffer.from(signature, 'utf8');
+      const valid = secretBuf.length === sigBuf.length &&
+        crypto.timingSafeEqual(secretBuf, sigBuf);
+      if (!valid) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
     }
 
     const payload = await request.json();
