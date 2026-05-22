@@ -1,0 +1,8 @@
+OG Image Generation
+===================
+Create a 1200x630 image with:
+- Background: Blue gradient (#1E40AF to #3B82F6)
+- Text: "Fresh Talent Store" (white, bold)
+- Subtext: "Tech. Fresh. For You." (white, smaller)
+- Logo/Icon: Shopping bag or electronics icon
+- Save as og-image.jpg in public folder
