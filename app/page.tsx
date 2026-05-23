@@ -3,10 +3,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { ArrowRight, Star, Truck, Shield, Headphones, Zap, ShoppingCart, BadgePercent, Trophy, Gift } from 'lucide-react';
-import { SpinWheel } from '@/components/gamification/SpinWheel';
+import { ArrowRight, Star, Truck, Shield, Headphones, Zap, ShoppingCart, BadgePercent, Trophy, CheckCircle2 } from 'lucide-react';
 
-// ── Types ──────────────────────────────────────────────────────────────
 interface Category {
   id: number;
   name: string;
@@ -25,7 +23,6 @@ interface Product {
   is_featured: boolean;
 }
 
-// ── Sample products — 60 % laptops · 20 % phones · 20 % accessories ──
 const SAMPLE_PRODUCTS: Product[] = [
   {
     id: 101,
@@ -79,7 +76,6 @@ const SAMPLE_PRODUCTS: Product[] = [
   },
 ];
 
-// ── Hero floating cards — 2 laptops + 1 phone ─────────────────────────
 const HERO_CARDS = [
   {
     name: 'Laptop Core i5',
@@ -110,7 +106,6 @@ const HERO_CARDS = [
   },
 ];
 
-// ── Trust features bar ─────────────────────────────────────────────────
 const FEATURES = [
   { Icon: Truck,        title: 'Fast Delivery',    desc: 'Same-day in Kigali',        color: 'text-blue-600',   bg: 'bg-blue-50'   },
   { Icon: Shield,       title: 'Genuine Products', desc: '100% authentic, warranted', color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -118,24 +113,21 @@ const FEATURES = [
   { Icon: BadgePercent, title: 'Best Prices',      desc: 'Price-match guarantee',     color: 'text-orange-600', bg: 'bg-orange-50' },
 ];
 
-// ── Category showcase — 60/20/20 tile layout ──────────────────────────
 const SHOWCASES = [
-  { label: 'Business Laptops', img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=320&fit=crop&q=80', accent: 'from-blue-500 to-blue-700',    href: '/products?category=laptops'      },
-  { label: 'Gaming Laptops',   img: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400&h=320&fit=crop&q=80', accent: 'from-red-500 to-rose-700',     href: '/products?category=laptops'      },
-  { label: 'Slim Ultrabooks',  img: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&h=320&fit=crop&q=80', accent: 'from-indigo-500 to-indigo-700', href: '/products?category=laptops'      },
-  { label: 'Smartphones',      img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=320&fit=crop&q=80', accent: 'from-green-500 to-emerald-700', href: '/products?category=phones'       },
-  { label: 'Accessories',      img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=320&fit=crop&q=80', accent: 'from-orange-500 to-orange-700', href: '/products?category=accessories'  },
+  { label: 'Business Laptops', img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=320&fit=crop&q=80', accent: 'from-blue-500 to-blue-700',    href: '/products?category=laptops'     },
+  { label: 'Gaming Laptops',   img: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400&h=320&fit=crop&q=80', accent: 'from-red-500 to-rose-700',     href: '/products?category=laptops'     },
+  { label: 'Slim Ultrabooks',  img: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&h=320&fit=crop&q=80', accent: 'from-indigo-500 to-indigo-700', href: '/products?category=laptops'     },
+  { label: 'Smartphones',      img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=320&fit=crop&q=80', accent: 'from-green-500 to-emerald-700', href: '/products?category=phones'      },
+  { label: 'Accessories',      img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=320&fit=crop&q=80', accent: 'from-orange-500 to-orange-700', href: '/products?category=accessories' },
 ];
 
-// ── Loyalty tiers ──────────────────────────────────────────────────────
 const TIERS = [
-  { name: 'Bronze',   pts: '0–999',    color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  perks: 'Earn 1 pt / RWF 1,000' },
-  { name: 'Silver',   pts: '1k–4,999', color: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200',  perks: 'Earn 1.5 pts + priority support' },
-  { name: 'Gold',     pts: '5k–9,999', color: 'text-yellow-600', bg: 'bg-yellow-50',  border: 'border-yellow-200', perks: 'Earn 2 pts + flash access' },
-  { name: 'Platinum', pts: '10k+',     color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   perks: 'Earn 3 pts + VIP perks' },
+  { name: 'Bronze',   pts: '0 – 999',    color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  perks: 'Earn 1 pt per RWF 1,000 spent' },
+  { name: 'Silver',   pts: '1k – 4,999', color: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200',  perks: 'Earn 1.5 pts + priority support' },
+  { name: 'Gold',     pts: '5k – 9,999', color: 'text-yellow-600', bg: 'bg-yellow-50',  border: 'border-yellow-200', perks: 'Earn 2 pts + early flash access' },
+  { name: 'Platinum', pts: '10k+',       color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   perks: 'Earn 3 pts + VIP member perks' },
 ];
 
-// ── Stars ──────────────────────────────────────────────────────────────
 function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -146,7 +138,6 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-// ── Discount badge ─────────────────────────────────────────────────────
 function DiscountBadge({ price, compareAt }: { price: number; compareAt: number }) {
   const pct = Math.round((1 - price / compareAt) * 100);
   return (
@@ -156,7 +147,6 @@ function DiscountBadge({ price, compareAt }: { price: number; compareAt: number 
   );
 }
 
-// ── Main page ──────────────────────────────────────────────────────────
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -195,7 +185,7 @@ export default function Home() {
 
   return (
     <>
-      {/* ── HERO ──────────────────────────────────────────────────── */}
+      {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-900 hero-grid">
         <div className="absolute top-10 left-1/4 h-72 w-72 rounded-full bg-blue-500 blur-[120px] animate-glow-pulse pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-indigo-600 blur-[100px] animate-glow-pulse delay-400 pointer-events-none" />
@@ -203,7 +193,6 @@ export default function Home() {
         <div className="container mx-auto px-4 lg:px-6 py-20 lg:py-28 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
-            {/* Left */}
             <div className="space-y-7">
               <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 backdrop-blur text-white text-xs font-semibold px-4 py-2 rounded-full animate-fade-in">
                 <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
@@ -217,7 +206,7 @@ export default function Home() {
               </h1>
 
               <p className="text-slate-300 text-lg leading-relaxed max-w-md animate-slide-in-left delay-300">
-                Premium laptops, phones & accessories delivered fast across Kigali. Genuine products, spin to win discounts, earn loyalty points.
+                Premium laptops, phones &amp; accessories delivered fast across Kigali. Genuine products, earn loyalty points, enjoy exclusive member perks.
               </p>
 
               <div className="flex flex-wrap gap-3 animate-slide-in-left delay-400">
@@ -242,7 +231,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right — floating cards */}
+            {/* Floating product cards */}
             <div className="hidden lg:flex items-center justify-center relative h-[440px]">
               {HERO_CARDS.map((card, i) => {
                 const positions = ['top-0 left-8', 'top-24 right-0', 'bottom-0 left-20'];
@@ -268,7 +257,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FEATURES BAR ──────────────────────────────────────────── */}
+      {/* FEATURES BAR */}
       <section className="bg-white border-b border-slate-100">
         <div className="container mx-auto px-4 lg:px-6 py-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -287,7 +276,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CATEGORIES ────────────────────────────────────────────── */}
+      {/* CATEGORIES */}
       {categories.length > 0 && (
         <section className="bg-slate-50 py-16">
           <div className="container mx-auto px-4 lg:px-6">
@@ -316,7 +305,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── FEATURED PRODUCTS (60 % laptops · 20 % phones · 20 % acc) ── */}
+      {/* FEATURED PRODUCTS */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-end justify-between mb-10">
@@ -379,13 +368,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SHOWCASE TILES (60/20/20) ─────────────────────────────── */}
+      {/* SHOWCASE TILES */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-4 lg:px-6">
           <div className="text-center mb-10 animate-fade-in">
             <p className="text-violet-600 text-sm font-semibold tracking-wide uppercase mb-2">Shop by Type</p>
             <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Browse Our Catalogue</h2>
-            <p className="text-slate-500 text-sm mt-2">60 % Laptops · 20 % Phones · 20 % Accessories</p>
+            <p className="text-slate-500 text-sm mt-2">60% Laptops · 20% Phones · 20% Accessories</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -410,44 +399,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── GAMIFICATION HUB ──────────────────────────────────────── */}
+      {/* LOYALTY PROGRAM */}
       <section className="py-20 bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 relative overflow-hidden">
-        {/* Decorative glows */}
         <div className="absolute top-0 left-1/3 h-80 w-80 rounded-full bg-indigo-600 blur-[130px] opacity-20 pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-violet-600 blur-[100px] opacity-20 pointer-events-none" />
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
-          {/* Section header */}
           <div className="text-center mb-12">
             <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white text-xs font-semibold px-4 py-2 rounded-full mb-5">
-              🎮 Gamified Shopping Experience
+              <Trophy className="h-3.5 w-3.5 text-yellow-400" /> Loyalty Rewards Program
             </span>
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight">Play. Shop. Win.</h2>
+            <h2 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight">Shop More. Earn More.</h2>
             <p className="text-slate-400 text-base mt-3 max-w-lg mx-auto">
-              Spin daily for discounts, earn loyalty points on every purchase, and level up through exclusive tiers.
+              Earn points on every purchase and unlock exclusive perks as you level up through our loyalty tiers.
             </p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-10 items-start">
 
-            {/* ── Left: Spin Wheel ────────────────────────────────── */}
-            <div className="bg-white/8 backdrop-blur-sm border border-white/15 rounded-3xl p-7">
-              <div className="flex items-center gap-2 mb-1">
-                <Gift className="h-5 w-5 text-orange-400" />
-                <h3 className="text-white font-bold text-lg">Spin the Wheel</h3>
-              </div>
-              <p className="text-slate-400 text-sm mb-6">One free spin every day — win discounts or bonus points!</p>
-              <SpinWheel />
-            </div>
-
-            {/* ── Right: Loyalty Tiers + Stats ────────────────────── */}
+            {/* Left: Stats + benefits */}
             <div className="space-y-5">
-              {/* Quick stats row */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { icon: '🏆', value: '4 Tiers',   label: 'Loyalty Levels'  },
-                  { icon: '⭐', value: '1 pt',      label: 'per RWF 1,000'   },
-                  { icon: '🎁', value: '100 pts',   label: '= RWF 1,000 off' },
+                  { icon: '🏆', value: '4 Tiers',  label: 'Loyalty Levels'  },
+                  { icon: '⭐', value: '1 pt',     label: 'per RWF 1,000'   },
+                  { icon: '🎁', value: '100 pts',  label: '= RWF 1,000 off' },
                 ].map(({ icon, value, label }) => (
                   <div key={label} className="bg-white/8 border border-white/15 rounded-2xl p-4 text-center">
                     <p className="text-2xl mb-1">{icon}</p>
@@ -457,37 +433,53 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Tier cards */}
+              <div className="bg-white/8 border border-white/15 rounded-3xl p-6 space-y-3">
+                <h3 className="text-white font-bold text-base mb-4">Member Benefits</h3>
+                {[
+                  'Earn points on every purchase automatically',
+                  'Early access to flash sales and new arrivals',
+                  'Priority customer support for Silver and above',
+                  'Exclusive VIP perks at Platinum tier',
+                ].map((benefit) => (
+                  <div key={benefit} className="flex items-start gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-green-400 shrink-0 mt-0.5" />
+                    <p className="text-slate-300 text-sm">{benefit}</p>
+                  </div>
+                ))}
+              </div>
+
+              <Link href="/account">
+                <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 text-sm">
+                  View My Points &amp; Tier <ArrowRight className="h-4 w-4" />
+                </button>
+              </Link>
+            </div>
+
+            {/* Right: Tier cards */}
+            <div className="space-y-4">
               {TIERS.map(({ name, pts, color, bg, border, perks }) => (
                 <div
                   key={name}
                   className="flex items-center gap-4 bg-white/8 border border-white/15 rounded-2xl px-5 py-4 hover:bg-white/12 transition-colors"
                 >
-                  <div className={`h-10 w-10 rounded-xl ${bg} border ${border} flex items-center justify-center shrink-0`}>
-                    <Trophy className={`h-5 w-5 ${color}`} />
+                  <div className={`h-12 w-12 rounded-xl ${bg} border ${border} flex items-center justify-center shrink-0`}>
+                    <Trophy className={`h-6 w-6 ${color}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-bold text-sm">{name}</span>
-                      <span className="text-slate-400 text-xs">· {pts} pts</span>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-white font-bold text-base">{name}</span>
+                      <span className="text-slate-400 text-xs bg-white/10 px-2 py-0.5 rounded-full">{pts} pts</span>
                     </div>
-                    <p className="text-slate-400 text-xs mt-0.5 truncate">{perks}</p>
+                    <p className="text-slate-400 text-sm">{perks}</p>
                   </div>
                 </div>
               ))}
-
-              {/* CTA */}
-              <Link href="/account">
-                <button className="w-full mt-2 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 text-sm">
-                  View My Points & Achievements <ArrowRight className="h-4 w-4" />
-                </button>
-              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── CTA BANNER ────────────────────────────────────────────── */}
+      {/* CTA BANNER */}
       <section className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 py-16">
         <div className="absolute inset-0 hero-grid pointer-events-none" />
         <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-white/5 blur-3xl pointer-events-none" />
