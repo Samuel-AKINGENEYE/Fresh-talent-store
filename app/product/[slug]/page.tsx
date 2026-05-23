@@ -7,6 +7,28 @@ import Link from 'next/link';
 import { ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Minus, Plus } from 'lucide-react';
 import ProductReviews from '@/components/product/ProductReviews';
 
+function getProductImage(name: string, images?: string[]): string {
+  if (images?.[0]) return images[0];
+  const n = name.toLowerCase();
+  if (n.includes('iphone'))                                   return 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('galaxy') || n.includes('samsung'))         return 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('xiaomi') || n.includes('redmi'))           return 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('macbook'))                                  return 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('dell') || n.includes('xps'))               return 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('rog') || n.includes('gaming laptop'))      return 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('thinkpad') || n.includes('lenovo'))        return 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('pavilion') || n.startsWith('hp '))         return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('acer'))                                    return 'https://images.unsplash.com/photo-1588702547923-7408785919c3?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('airpods'))                                 return 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('headphone') || n.includes('wh-') || n.includes('earphone') || n.includes('beats')) return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('watch'))                                   return 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('charger') || n.includes('hub') || n.includes('anker') || n.includes('cable')) return 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('keyboard'))                                return 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('mouse'))                                   return 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=1200&h=1200&fit=crop&q=90';
+  if (n.includes('phone') || n.includes('smartphone'))      return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&h=1200&fit=crop&q=90';
+  return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=1200&h=1200&fit=crop&q=90';
+}
+
 interface Product {
   id: number;
   name: string;
@@ -115,7 +137,8 @@ export default function ProductDetailPage() {
 
   if (!product) return null;
 
-  const images = product.images?.length ? product.images : ['/placeholder.jpg'];
+  const resolvedMain = getProductImage(product.name, product.images);
+  const images = product.images?.length ? product.images : [resolvedMain];
 
   return (
     <div className="min-h-screen bg-slate-50 py-8">
@@ -135,9 +158,15 @@ export default function ProductDetailPage() {
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="grid md:grid-cols-2 gap-8 p-6 lg:p-8">
             {/* Image Gallery */}
-            <div>
-              <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden mb-4 border border-slate-100">
-                <img src={images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+            <div className="space-y-4">
+              <div className="aspect-square bg-slate-100 rounded-2xl overflow-hidden border border-slate-100 shadow-sm group">
+                <img
+                  src={images[selectedImage]}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  loading="eager"
+                  decoding="async"
+                />
               </div>
               {images.length > 1 && (
                 <div className="flex gap-2 flex-wrap" role="tablist" aria-label="Product images">
@@ -147,7 +176,7 @@ export default function ProductDetailPage() {
                       role="tab"
                       aria-selected={selectedImage === idx}
                       onClick={() => setSelectedImage(idx)}
-                      className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 ${selectedImage === idx ? 'border-blue-600 ring-2 ring-blue-200' : 'border-slate-200 hover:border-slate-400'}`}
+                      className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 ${selectedImage === idx ? 'border-blue-600 ring-2 ring-blue-200' : 'border-slate-200 hover:border-blue-300'}`}
                     >
                       <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
                     </button>

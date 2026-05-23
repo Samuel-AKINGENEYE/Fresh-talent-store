@@ -77,6 +77,12 @@ export function Header() {
               <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
               Flash Sales
             </Link>
+            <Link
+              href="/about"
+              className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all duration-200"
+            >
+              About
+            </Link>
           </nav>
 
           {/* Actions */}
