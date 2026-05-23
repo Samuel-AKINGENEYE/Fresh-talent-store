@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { MapPin, Plus, Trash2, Star } from 'lucide-react';
 
 interface Address {
   id: number;
@@ -16,6 +16,16 @@ interface Address {
   is_default: boolean;
 }
 
+const EMPTY_FORM = {
+  full_name: '',
+  phone: '',
+  address_line1: '',
+  address_line2: '',
+  city: 'Kigali',
+  sector: '',
+  is_default: false,
+};
+
 export default function AddressesPage() {
   const router = useRouter();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -23,224 +33,253 @@ export default function AddressesPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    full_name: '',
-    phone: '',
-    address_line1: '',
-    address_line2: '',
-    city: 'Kigali',
-    sector: '',
-    is_default: false,
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
   useEffect(() => {
-    async function loadUserAndAddresses() {
+    async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      
+      if (!user) { router.push('/login'); return; }
       setUserId(user.id);
-      
-      const { data: addresses } = await supabase
+
+      const { data } = await supabase
         .from('addresses')
         .select('*')
         .eq('user_id', user.id)
         .order('is_default', { ascending: false });
-      
-      setAddresses(addresses || []);
+
+      setAddresses(data || []);
       setLoading(false);
     }
-    
-    loadUserAndAddresses();
+    load();
   }, [router]);
+
+  const reload = async () => {
+    if (!userId) return;
+    const { data } = await supabase
+      .from('addresses')
+      .select('*')
+      .eq('user_id', userId)
+      .order('is_default', { ascending: false });
+    setAddresses(data || []);
+  };
 
   const handleSave = async () => {
     if (!userId) return;
-    
     setSaving(true);
-    
-    const { error } = await supabase
-      .from('addresses')
-      .insert({
-        ...formData,
-        user_id: userId,
-      });
-    
+    const { error } = await supabase.from('addresses').insert({ ...formData, user_id: userId });
     if (error) {
       alert('Error saving address: ' + error.message);
     } else {
       setShowForm(false);
-      setFormData({
-        full_name: '',
-        phone: '',
-        address_line1: '',
-        address_line2: '',
-        city: 'Kigali',
-        sector: '',
-        is_default: false,
-      });
-      // Reload addresses
-      const { data: newAddresses } = await supabase
-        .from('addresses')
-        .select('*')
-        .eq('user_id', userId);
-      setAddresses(newAddresses || []);
+      setFormData(EMPTY_FORM);
+      await reload();
     }
     setSaving(false);
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this address?')) {
-      const { error } = await supabase
-        .from('addresses')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        alert('Error deleting address: ' + error.message);
-      } else {
-        setAddresses(addresses.filter(a => a.id !== id));
-      }
+    if (!confirm('Delete this address?')) return;
+    const { error } = await supabase.from('addresses').delete().eq('id', id);
+    if (error) {
+      alert('Error deleting address: ' + error.message);
+    } else {
+      setAddresses((prev) => prev.filter(a => a.id !== id));
     }
+  };
+
+  const setDefault = async (id: number) => {
+    if (!userId) return;
+    await supabase.from('addresses').update({ is_default: false }).eq('user_id', userId);
+    await supabase.from('addresses').update({ is_default: true }).eq('id', id);
+    await reload();
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <Link href="/account" className="text-blue-600 hover:text-blue-700">
-              ← Back to Account
-            </Link>
-            <h1 className="text-2xl font-bold">My Addresses</h1>
-          </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            + Add New Address
-          </button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="hidden lg:block">
+          <h1 className="text-2xl font-bold text-gray-900">Addresses</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage your delivery addresses</p>
         </div>
-        
-        {showForm && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Add New Address</h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Full Name"
-                className="w-full px-3 py-2 border rounded"
-                value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              />
-              <input
-                type="tel"
-                placeholder="Phone Number"
-                className="w-full px-3 py-2 border rounded"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Address Line 1"
-                className="w-full px-3 py-2 border rounded"
-                value={formData.address_line1}
-                onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Address Line 2 (Optional)"
-                className="w-full px-3 py-2 border rounded"
-                value={formData.address_line2}
-                onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
-              />
-              <div className="grid grid-cols-2 gap-4">
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          Add Address
+        </button>
+      </div>
+
+      {/* Add form */}
+      {showForm && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <h2 className="font-semibold text-gray-900 mb-4">New Address</h2>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Full Name</label>
                 <input
                   type="text"
-                  placeholder="City"
-                  className="w-full px-3 py-2 border rounded"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  placeholder="Jean-Paul Mugisha"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Phone</label>
+                <input
+                  type="tel"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+250 788 123 456"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Address Line 1</label>
+              <input
+                type="text"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.address_line1}
+                onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
+                placeholder="KG 123 Street"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                Address Line 2 <span className="normal-case text-gray-400 font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.address_line2}
+                onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
+                placeholder="Apartment, floor, etc."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">City</label>
+                <input
+                  type="text"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Sector/Area</label>
                 <input
                   type="text"
-                  placeholder="Sector/Area"
-                  className="w-full px-3 py-2 border rounded"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.sector}
                   onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
+                  placeholder="Kimironko"
                 />
-              </div>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.is_default}
-                  onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                />
-                <span>Set as default address</span>
-              </label>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  {saving ? 'Saving...' : 'Save Address'}
-                </button>
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 border rounded hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
               </div>
             </div>
+
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                checked={formData.is_default}
+                onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+              />
+              <span className="text-sm text-gray-700">Set as default address</span>
+            </label>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {saving ? 'Saving…' : 'Save Address'}
+              </button>
+              <button
+                onClick={() => { setShowForm(false); setFormData(EMPTY_FORM); }}
+                className="flex-1 py-2.5 border border-gray-200 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        )}
-        
-        {addresses.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600">No addresses saved yet</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {addresses.map((address) => (
-              <div key={address.id} className="bg-white rounded-lg shadow p-6">
-                <div className="flex justify-between">
-                  <div>
+        </div>
+      )}
+
+      {addresses.length === 0 && !showForm ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+          <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium mb-1">No addresses saved</p>
+          <p className="text-gray-400 text-sm mb-5">Add a delivery address to speed up checkout</p>
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Your First Address
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {addresses.map((address) => (
+            <div
+              key={address.id}
+              className={`bg-white rounded-2xl border p-5 ${address.is_default ? 'border-blue-200 shadow-sm' : 'border-gray-100'}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <p className="font-semibold text-gray-900">{address.full_name}</p>
                     {address.is_default && (
-                      <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-1 rounded mb-2">
+                      <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                        <Star className="h-3 w-3 fill-blue-600" />
                         Default
                       </span>
                     )}
-                    <p className="font-semibold">{address.full_name}</p>
-                    <p className="text-gray-600">{address.phone}</p>
-                    <p className="text-gray-600">{address.address_line1}</p>
-                    {address.address_line2 && <p className="text-gray-600">{address.address_line2}</p>}
-                    <p className="text-gray-600">{address.city}, {address.sector}</p>
                   </div>
+                  <p className="text-sm text-gray-500">{address.phone}</p>
+                  <p className="text-sm text-gray-600 mt-1">{address.address_line1}</p>
+                  {address.address_line2 && <p className="text-sm text-gray-600">{address.address_line2}</p>}
+                  <p className="text-sm text-gray-600">{address.city}{address.sector ? `, ${address.sector}` : ''}</p>
+                </div>
+
+                <div className="flex flex-col gap-1.5 shrink-0">
+                  {!address.is_default && (
+                    <button
+                      onClick={() => setDefault(address.id)}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      Set default
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(address.id)}
-                    className="text-red-600 hover:text-red-700 text-sm"
+                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    aria-label="Delete address"
                   >
-                    Delete
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
