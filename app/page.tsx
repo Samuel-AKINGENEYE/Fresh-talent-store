@@ -128,6 +128,29 @@ const TIERS = [
   { name: 'Platinum', pts: '10k+',       color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   perks: 'Earn 3 pts + VIP member perks' },
 ];
 
+function getProductImage(name: string, images?: string[]): string | null {
+  if (images?.[0]) return images[0];
+  const n = name.toLowerCase();
+  if (n.includes('iphone'))                                   return 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=480&h=480&fit=crop&q=85';
+  if (n.includes('galaxy') || n.includes('samsung'))         return 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=480&h=480&fit=crop&q=85';
+  if (n.includes('xiaomi') || n.includes('redmi'))           return 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=480&h=480&fit=crop&q=85';
+  if (n.includes('macbook'))                                  return 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=480&h=480&fit=crop&q=85';
+  if (n.includes('dell') || n.includes('xps'))               return 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=480&h=480&fit=crop&q=85';
+  if (n.includes('rog') || n.includes('gaming laptop'))      return 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=480&h=480&fit=crop&q=85';
+  if (n.includes('thinkpad') || n.includes('lenovo'))        return 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=480&h=480&fit=crop&q=85';
+  if (n.includes('pavilion') || n.includes(' hp ') || n.startsWith('hp ')) return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=480&h=480&fit=crop&q=85';
+  if (n.includes('acer'))                                    return 'https://images.unsplash.com/photo-1588702547923-7408785919c3?w=480&h=480&fit=crop&q=85';
+  if (n.includes('airpods'))                                 return 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=480&h=480&fit=crop&q=85';
+  if (n.includes('headphone') || n.includes('wh-') || n.includes('earphone') || n.includes('beats')) return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=480&h=480&fit=crop&q=85';
+  if (n.includes('watch'))                                   return 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=480&h=480&fit=crop&q=85';
+  if (n.includes('charger') || n.includes('hub') || n.includes('anker') || n.includes('cable')) return 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=480&h=480&fit=crop&q=85';
+  if (n.includes('keyboard'))                                return 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=480&h=480&fit=crop&q=85';
+  if (n.includes('mouse'))                                   return 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=480&h=480&fit=crop&q=85';
+  if (n.includes('phone') || n.includes('smartphone'))      return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=480&h=480&fit=crop&q=85';
+  if (n.includes('laptop') || n.includes('notebook') || n.includes('ultrabook')) return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=480&h=480&fit=crop&q=85';
+  return null;
+}
+
 function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -319,21 +342,23 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-            {displayProducts.map((product, i) => (
+            {displayProducts.map((product, i) => {
+              const imgUrl = getProductImage(product.name, product.images);
+              return (
               <div
                 key={product.id}
                 className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm card-hover animate-scale-in"
                 style={{ animationDelay: `${i * 0.08}s` }}
               >
                 <div className="relative aspect-square overflow-hidden bg-slate-50">
-                  {product.images?.[0] ? (
+                  {imgUrl ? (
                     <img
-                      src={product.images[0]}
+                      src={imgUrl}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-6xl">💻</div>
+                    <div className="w-full h-full flex items-center justify-center text-6xl">📦</div>
                   )}
                   {product.compare_at_price && (
                     <DiscountBadge price={product.price} compareAt={product.compare_at_price} />
@@ -363,7 +388,8 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

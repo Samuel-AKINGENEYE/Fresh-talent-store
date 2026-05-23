@@ -128,6 +128,29 @@ const PRICE_PRESETS = [
   { label: 'Over 1M', min: 1000000 },
 ];
 
+function getProductImage(name: string, images?: string[]): string | null {
+  if (images?.[0]) return images[0];
+  const n = name.toLowerCase();
+  if (n.includes('iphone'))                                   return 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&h=600&fit=crop&q=85';
+  if (n.includes('galaxy') || n.includes('samsung'))         return 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=600&h=600&fit=crop&q=85';
+  if (n.includes('xiaomi') || n.includes('redmi'))           return 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600&h=600&fit=crop&q=85';
+  if (n.includes('macbook'))                                  return 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&h=600&fit=crop&q=85';
+  if (n.includes('dell') || n.includes('xps'))               return 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600&h=600&fit=crop&q=85';
+  if (n.includes('rog') || n.includes('gaming laptop'))      return 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=600&h=600&fit=crop&q=85';
+  if (n.includes('thinkpad') || n.includes('lenovo'))        return 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=600&h=600&fit=crop&q=85';
+  if (n.includes('pavilion') || n.includes(' hp ') || n.startsWith('hp ')) return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&h=600&fit=crop&q=85';
+  if (n.includes('acer'))                                    return 'https://images.unsplash.com/photo-1588702547923-7408785919c3?w=600&h=600&fit=crop&q=85';
+  if (n.includes('airpods'))                                 return 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600&h=600&fit=crop&q=85';
+  if (n.includes('headphone') || n.includes('wh-') || n.includes('earphone') || n.includes('beats')) return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=600&fit=crop&q=85';
+  if (n.includes('watch'))                                   return 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&h=600&fit=crop&q=85';
+  if (n.includes('charger') || n.includes('hub') || n.includes('anker') || n.includes('cable')) return 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=600&h=600&fit=crop&q=85';
+  if (n.includes('keyboard'))                                return 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&h=600&fit=crop&q=85';
+  if (n.includes('mouse'))                                   return 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&h=600&fit=crop&q=85';
+  if (n.includes('phone') || n.includes('smartphone'))      return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&h=600&fit=crop&q=85';
+  if (n.includes('laptop') || n.includes('notebook') || n.includes('ultrabook')) return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&h=600&fit=crop&q=85';
+  return null;
+}
+
 function Stars({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'xs' }) {
   const cls = size === 'xs' ? 'h-3 w-3' : 'h-3.5 w-3.5';
   return (
@@ -533,13 +556,14 @@ function GridCard({
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
     : 0;
   const outOfStock = product.stock === 0;
+  const imgUrl = getProductImage(product.name, product.images);
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-0.5 transition-all duration-300">
       <div className="relative aspect-square overflow-hidden bg-slate-50">
-        {product.images?.[0] ? (
+        {imgUrl ? (
           <img
-            src={product.images[0]}
+            src={imgUrl}
             alt={product.name}
             className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out ${outOfStock ? 'opacity-50' : ''}`}
           />
@@ -623,12 +647,13 @@ function ListCard({
   const discount = product.compare_at_price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
     : 0;
+  const imgUrl = getProductImage(product.name, product.images);
 
   return (
     <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex">
       <div className="relative w-36 sm:w-48 flex-shrink-0 bg-slate-50 overflow-hidden">
-        {product.images?.[0] ? (
-          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        {imgUrl ? (
+          <img src={imgUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl text-slate-300">📦</div>
         )}
