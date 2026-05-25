@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MapPin, Phone, Mail, Instagram, Facebook, Twitter } from 'lucide-react';
+import { MapPin, Phone, Mail, Share2, Globe, MessageCircle } from 'lucide-react';
 import { Logo } from './Logo';
 
 export function Footer() {
@@ -22,9 +22,9 @@ export function Footer() {
   ];
 
   const socials = [
-    { Icon: Facebook,  label: 'Facebook',  href: '#' },
-    { Icon: Instagram, label: 'Instagram', href: '#' },
-    { Icon: Twitter,   label: 'Twitter',   href: '#' },
+    { Icon: Share2,        label: 'Facebook',  href: '#' },
+    { Icon: Globe,         label: 'Instagram', href: '#' },
+    { Icon: MessageCircle, label: 'Twitter',   href: '#' },
   ];
 
   return (
