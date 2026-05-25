@@ -292,20 +292,20 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-slate-50">
       {/* Page header */}
       <div className="bg-white border-b border-slate-100">
-        <div className="container mx-auto px-4 lg:px-6 py-8">
+        <div className="container mx-auto px-4 lg:px-6 py-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500 mb-1">
-                <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
-                <span className="mx-2 text-slate-300">/</span>
-                <span className="text-slate-700 font-medium">Shop</span>
+              <p className="text-sm text-slate-400 mb-2 flex items-center gap-1.5">
+                <Link href="/" className="hover:text-blue-600 transition-colors font-medium">Home</Link>
+                <span className="text-slate-200">/</span>
+                <span className="text-slate-600 font-semibold">Shop</span>
               </p>
               <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">Shop Electronics</h1>
-              <p className="text-slate-500 text-sm mt-1">Premium laptops, phones &amp; accessories in Kigali</p>
+              <p className="text-slate-500 text-sm mt-1.5">Premium laptops, phones &amp; accessories in Kigali</p>
             </div>
             <Link href="/flash-sales">
-              <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-orange-100 transition-colors cursor-pointer">
-                <Zap className="h-4 w-4 fill-orange-500 text-orange-500" />
+              <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-amber-100 transition-colors cursor-pointer">
+                <Zap className="h-4 w-4 fill-amber-500 text-amber-500" />
                 Flash Sales Active
               </div>
             </Link>
@@ -317,10 +317,10 @@ export default function ProductsPage() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-bold transition-all duration-150 ${
                   activeTab === tab.value
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-blue-700 text-white shadow-md shadow-blue-700/25'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
                 }`}
               >
                 <span>{tab.icon}</span> {tab.label}
@@ -559,27 +559,27 @@ function GridCard({
   const imgUrl = getProductImage(product.name, product.images);
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-0.5 transition-all duration-300">
+    <div className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-900/8 hover:-translate-y-1 transition-all duration-250">
       <div className="relative aspect-square overflow-hidden bg-slate-50">
         {imgUrl ? (
           <img
             src={imgUrl}
             alt={product.name}
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out ${outOfStock ? 'opacity-50' : ''}`}
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out ${outOfStock ? 'opacity-40' : ''}`}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-6xl text-slate-300">📦</div>
+          <div className="w-full h-full flex items-center justify-center text-6xl text-slate-200">📦</div>
         )}
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {discount > 0 && (
-            <span className="bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-lg shadow-sm">
+            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
               -{discount}%
             </span>
           )}
           {outOfStock && (
-            <span className="bg-slate-800/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg">
+            <span className="bg-slate-900/75 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
               Out of Stock
             </span>
           )}
@@ -589,8 +589,8 @@ function GridCard({
         <button
           onClick={(e) => onWishlist(product.id, e)}
           aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-          className={`absolute top-3 right-3 h-8 w-8 rounded-full shadow-md flex items-center justify-center transition-all duration-200 ${
-            wishlisted ? 'bg-red-500 text-white' : 'bg-white/90 text-slate-400 hover:text-red-500 hover:bg-white'
+          className={`absolute top-3 right-3 h-8 w-8 rounded-xl shadow-md flex items-center justify-center transition-all duration-150 ${
+            wishlisted ? 'bg-red-500 text-white' : 'bg-white/95 text-slate-400 hover:text-red-500'
           }`}
         >
           <Heart className={`h-4 w-4 ${wishlisted ? 'fill-white' : ''}`} />
@@ -598,8 +598,8 @@ function GridCard({
 
         {/* Quick add on hover */}
         {!outOfStock && (
-          <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-colors">
+          <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-250 ease-out">
+            <button className="w-full bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-colors">
               <ShoppingCart className="h-3.5 w-3.5" /> Add to Cart
             </button>
           </div>
@@ -608,10 +608,10 @@ function GridCard({
 
       <div className="p-4">
         {product.brand && (
-          <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">{product.brand}</p>
+          <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider mb-1">{product.brand}</p>
         )}
         <Link href={`/product/${product.slug}`}>
-          <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2 hover:text-blue-600 transition-colors mb-2">
+          <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2 hover:text-blue-700 transition-colors mb-2">
             {product.name}
           </h3>
         </Link>
@@ -619,14 +619,14 @@ function GridCard({
           <Stars rating={product.rating || 4.5} size="xs" />
           <span className="text-xs text-slate-400">({product.review_count || 0})</span>
         </div>
-        <div className="flex items-baseline gap-2 mb-3">
+        <div className="flex items-baseline gap-2 mb-3.5">
           <span className="text-blue-700 font-extrabold text-base">RWF {product.price.toLocaleString()}</span>
           {product.compare_at_price && (
             <span className="text-slate-400 text-xs line-through">{product.compare_at_price.toLocaleString()}</span>
           )}
         </div>
         <Link href={`/product/${product.slug}`}>
-          <button className="w-full bg-slate-900 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 rounded-xl transition-colors duration-200">
+          <button className="w-full bg-slate-900 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition-colors duration-150">
             View Details
           </button>
         </Link>

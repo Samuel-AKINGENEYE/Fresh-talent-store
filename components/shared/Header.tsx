@@ -47,7 +47,7 @@ export function Header() {
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-md shadow-slate-900/5 border-b border-slate-100'
+          ? 'bg-white/96 backdrop-blur-lg shadow-lg shadow-slate-900/6 border-b border-slate-200/80'
           : 'bg-white border-b border-slate-100'
       }`}
     >
@@ -58,28 +58,28 @@ export function Header() {
           <Logo size="md" onDark={false} />
 
           {/* Search — desktop */}
-          <div className="hidden md:flex flex-1 max-w-lg">
+          <div className="hidden md:flex flex-1 max-w-md">
             <SearchBar />
           </div>
 
-          {/* Nav links — desktop */}
-          <nav className="hidden md:flex items-center gap-1">
+          {/* Nav — desktop */}
+          <nav className="hidden md:flex items-center gap-0.5">
             <Link
               href="/products"
-              className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+              className="px-3.5 py-2 text-sm font-semibold text-slate-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-150"
             >
               Shop
             </Link>
             <Link
               href="/flash-sales"
-              className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all duration-200 flex items-center gap-1"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-150"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
               Flash Sales
             </Link>
             <Link
               href="/about"
-              className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all duration-200"
+              className="px-3.5 py-2 text-sm font-semibold text-slate-600 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-all duration-150"
             >
               About
             </Link>
@@ -93,10 +93,10 @@ export function Header() {
 
             {/* Wishlist */}
             <Link href="/wishlist">
-              <button className="relative h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200">
+              <button className="relative h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 transition-all duration-150">
                 <Heart className="h-5 w-5" />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-blue-600 text-[10px] font-bold text-white flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
                     {wishlistCount}
                   </span>
                 )}
@@ -105,10 +105,10 @@ export function Header() {
 
             {/* Cart */}
             <Link href="/cart">
-              <button className="relative h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-orange-500 hover:bg-orange-50 transition-all duration-200">
+              <button className="relative h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-150">
                 <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-orange-500 text-[10px] font-bold text-white flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-blue-600 text-[10px] font-bold text-white flex items-center justify-center">
                     {totalItems}
                   </span>
                 )}
@@ -119,20 +119,20 @@ export function Header() {
             {user ? (
               <div className="flex items-center gap-1">
                 <Link href="/account">
-                  <button className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200">
+                  <button className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-150">
                     <User className="h-5 w-5" />
                   </button>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                  className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
               </div>
             ) : (
               <Link href="/login">
-                <button className="ml-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200">
+                <button className="ml-1 bg-blue-700 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-sm shadow-sm shadow-blue-700/20 hover:shadow-blue-600/30 transition-all duration-150">
                   Sign In
                 </button>
               </Link>
@@ -141,7 +141,8 @@ export function Header() {
             {/* Mobile toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all duration-200"
+              className="md:hidden h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all duration-150"
+              aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -153,22 +154,23 @@ export function Header() {
           <div className="md:hidden py-4 border-t border-slate-100 space-y-4 animate-slide-up">
             <SearchBar />
             <LocaleSwitcher />
-            <div className="space-y-1">
+            <nav className="space-y-1">
               {[
-                { href: '/products', label: 'Shop' },
+                { href: '/products',    label: 'Shop All Products' },
                 { href: '/flash-sales', label: 'Flash Sales' },
-                { href: '/account', label: 'My Account' },
+                { href: '/account',     label: 'My Account' },
+                { href: '/about',       label: 'About Us' },
               ].map(({ href, label }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                  className="flex items-center px-3 py-2.5 text-sm font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-150"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {label}
                 </Link>
               ))}
-            </div>
+            </nav>
           </div>
         )}
       </div>
